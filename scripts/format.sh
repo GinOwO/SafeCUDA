@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 extensions=(
         "*.c" "*.cpp" "*.cc" "*.cxx" "*.c++"
         "*.h" "*.hpp" "*.hh" "*.hxx" "*.h++"

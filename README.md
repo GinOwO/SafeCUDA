@@ -50,3 +50,9 @@ Format the code using clang-format by running:
 ```bash
 sh ./scripts/format.sh
 ```
+
+Note: Please enable the the pre-commit hook which automatically formats code & test changes in Release build before committing. 
+You can enable it by running:
+```bash
+sh ./scripts/enable_pre_commit_hook.sh
+```
