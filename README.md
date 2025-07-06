@@ -8,13 +8,21 @@ Install the following dependencies:
 - cmake
 - ninja
 - cuda-toolkit-12-9 (https://developer.nvidia.com/cuda-downloads)
+- gtest
 
 Note: Ensure that the CUDA toolkit is installed in `/usr/local/cuda`.
+
 Note: Ensure that `gcc-14` and `g++-14` are symlinked to `gcc` and `g++` respectively in CUDA's `bin` directory.:
 ```bash
 sudo ln -s /usr/bin/gcc-14 /usr/local/cuda/bin/gcc
 sudo ln -s /usr/bin/g++-14 /usr/local/cuda/bin/g++
 ```
+
+Note: If you encounter issues failing to compile due to math function specifications, apply the patch with (run as root):
+```bash
+sh ./scripts/apply_math_fix.sh
+```
+
 
 ## Build Instructions
 1. Clone the repository:
@@ -24,14 +32,21 @@ sudo ln -s /usr/bin/g++-14 /usr/local/cuda/bin/g++
    ```
 3. Run the build script:
    ```bash
-   ./scripts/build.sh [Debug|Release]
+   sh ./scripts/build.sh [Debug|Release]
    ```
    Replace `[Debug|Release]` with your desired build type (default is Debug).
-4. If you encounter issues with math functions, apply the patch:
+4. Test the build:
    ```bash
-   ./scripts/apply_math_fix.sh
+   sh ./scripts/test.sh
    ```
-5. Test the build:
-   ```bash
-   ./build/safecuda_test
-   ```
+
+Or you can build and test using:
+```bash
+sh ./scripts/build_and_test.sh [Debug|Release]
+```
+
+## Formatting
+Format the code using clang-format by running:
+```bash
+sh ./scripts/format.sh
+```

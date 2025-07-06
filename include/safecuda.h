@@ -1,9 +1,8 @@
 /**
- * @file safecuda.cpp
+ * @file safecuda.h
  * @brief SafeCUDA host-side implementation (placeholder)
  * 
- * This file will contain the main SafeCUDA host-side implementation
- * including memory allocation interception and metadata management.
+ * Header file for safecuda.cpp
  * 
  * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
  * @date 2025-07-05
@@ -14,10 +13,12 @@
  * - 2025-07-05: Initial implementation
  */
 
-#include "safecuda.h"
+#ifndef SAFECUDA_H
+#define SAFECUDA_H
 
-// Placeholder implementation
 namespace safecuda
 {
-// TODO: Implement SafeCUDA functionality
+// TODO: Define public API
 }
+
+#endif // SAFECUDA_H

@@ -1,9 +1,8 @@
 /**
- * @file safecuda.cu
+ * @file safecuda.cuh
  * @brief SafeCUDA device-side implementation (placeholder)
  * 
- * This file will contain CUDA kernels for bounds checking and
- * device-side memory safety operations.
+ * CUDA header file for safecuda.cu
  * 
  * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
  * @date 2025-07-05
@@ -14,7 +13,11 @@
  * - 2025-07-05: Initial implementation
  */
 
-#include "safecuda.cuh"
+#ifndef SAFECUDA_CUH
+#define SAFECUDA_CUH
 
-// Placeholder CUDA kernels
-// TODO: Implement bounds checking kernels
+#include <cuda_runtime.h>
+
+// TODO: Define CUDA API
+
+#endif // SAFECUDA_CUH
