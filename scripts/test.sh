@@ -2,8 +2,11 @@
 
 set -e
 
+BUILD_TYPE=${1:-Debug}
+BUILD_DIR="cmake-build-$BUILD_TYPE"
+
 echo "Running tests for SafeCUDA..."
-cd build
+cd "$BUILD_DIR"
 ctest --output-on-failure
 
 # shellcheck disable=SC2181
