@@ -9,8 +9,11 @@ Install the following dependencies:
 - ninja
 - cuda-toolkit-12-9 (https://developer.nvidia.com/cuda-downloads)
 - gtest
+- gtest-devel
 
 Note: Ensure that the CUDA toolkit is installed in `/usr/local/cuda`.
+
+Note: For Fedora users, please ensure that `gcc14-c++` packages are installed as well.
 
 Note: Ensure that `gcc-14` and `g++-14` are symlinked to `gcc` and `g++` respectively in CUDA's `bin` directory.:
 ```bash
