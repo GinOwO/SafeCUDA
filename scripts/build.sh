@@ -19,15 +19,15 @@ echo "Building SafeCUDA in $BUILD_TYPE mode..."
 # Check if CUDA is available
 if ! command -v nvcc &>/dev/null; then
         echo "Error: nvcc not found. Please install CUDA development tools."
-		echo $PATH
+		echo "$PATH"
         exit 1
 fi
 
 echo "Using CUDA compiler: $(which nvcc)"
 echo "CUDA version: $(nvcc --version | grep release)"
 
-mkdir -p $BUILD_DIR
-cd $BUILD_DIR
+mkdir -p "$BUILD_DIR"
+cd "$BUILD_DIR"
 
 cmake -G Ninja \
         -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
