@@ -4,8 +4,8 @@ set(CMAKE_CUDA_COMPILER "/usr/local/cuda/bin/nvcc")
 set(CMAKE_CUDA_ARCHITECTURES 52 60 61 75 86)
 
 set(PROJECT_VERSION_MAJOR 0)
-set(PROJECT_VERSION_MINOR 0)
-set(PROJECT_VERSION_PATCH 1)
+set(PROJECT_VERSION_MINOR 2)
+set(PROJECT_VERSION_PATCH 0)
 set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 
 project(SafeCUDA VERSION ${PROJECT_VERSION} LANGUAGES CXX CUDA)
@@ -34,6 +34,9 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
     set(CMAKE_CUDA_FLAGS_RELEASE "-O3 -DNDEBUG")
 endif ()
 
+option(BUILD_SAFECUDA_TOOLS "Build SafeCUDA tools (sf-nvcc)" ON)
+
+# Build libsafecuda ------------------------------------------------------------
 add_library(safecuda SHARED
         src/safecuda.cpp
         src/safecuda.cu
@@ -55,7 +58,13 @@ target_compile_options(safecuda PRIVATE
         $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
 )
 
-# Enable testing
+# Tools ------------------------------------------------------------------------
+if (BUILD_SAFECUDA_TOOLS)
+    message(STATUS "Building SafeCUDA tools")
+    add_subdirectory(tools)
+endif ()
+
+# Tests ------------------------------------------------------------------------
 find_package(GTest REQUIRED)
 enable_testing()
 
@@ -65,3 +74,6 @@ add_subdirectory(tests)
 # # Installation rules
 # install(TARGETS safecuda DESTINATION lib)
 # install(FILES include/safecuda.h include/safecuda.cuh DESTINATION include)
+# if(BUILD_SAFECUDA_TOOLS)
+#     install(TARGETS sf-nvcc DESTINATION bin)
+# endif()
