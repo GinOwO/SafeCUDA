@@ -17,8 +17,6 @@
 #ifndef TEST_CUDA_LINKING_CUH
 #define TEST_CUDA_LINKING_CUH
 
-#include <cuda_runtime.h>
-
 namespace cuda_linking_tests
 {
 extern "C" void launch_test_kernel(float *d_data, int size);

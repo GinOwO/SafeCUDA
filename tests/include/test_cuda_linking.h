@@ -17,9 +17,6 @@
 #ifndef TEST_CUDA_LINKING_H
 #define TEST_CUDA_LINKING_H
 
-#include <stdexcept>
-#include <vector>
-
 #include <cuda_runtime.h>
 #include <gtest/gtest.h>
 
@@ -34,8 +31,9 @@ class CudaLinkingTest : public ::testing::Test {
 	void SetUp() override;
 	void TearDown() override;
 
-	void print_device_info(int device_id);
-	bool check_cuda_error(cudaError_t error, const std::string &operation);
+	static void print_device_info(int device_id);
+	static bool check_cuda_error(cudaError_t error,
+				     const std::string &operation);
 };
 
 } // namespace cuda_linking_tests

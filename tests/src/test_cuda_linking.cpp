@@ -73,7 +73,7 @@ void CudaLinkingTest::TearDown()
  */
 void CudaLinkingTest::print_device_info(int device_id)
 {
-	cudaDeviceProp prop;
+	cudaDeviceProp prop{};
 	cudaError_t err = cudaGetDeviceProperties(&prop, device_id);
 
 	if (err == cudaSuccess) {
@@ -187,8 +187,8 @@ TEST_F(CudaLinkingTest, MemoryAllocation)
  */
 TEST_F(CudaLinkingTest, MemoryOperations)
 {
-	const int size = TEST_ARRAY_SIZE;
-	const size_t bytes = size * sizeof(float);
+	constexpr int size = TEST_ARRAY_SIZE;
+	constexpr size_t bytes = size * sizeof(float);
 
 	std::vector<float> h_data(size);
 	for (int i = 0; i < size; ++i) {
@@ -230,8 +230,8 @@ TEST_F(CudaLinkingTest, MemoryOperations)
  */
 TEST_F(CudaLinkingTest, KernelExecution)
 {
-	const int size = TEST_ARRAY_SIZE;
-	const size_t bytes = size * sizeof(float);
+	constexpr int size = TEST_ARRAY_SIZE;
+	constexpr size_t bytes = size * sizeof(float);
 
 	std::vector<float> h_data(size);
 	for (int i = 0; i < size; ++i) {
@@ -262,7 +262,7 @@ TEST_F(CudaLinkingTest, KernelExecution)
 			<< "Kernel result mismatch at index " << i;
 	}
 
-	const float test_pattern = 42.0f;
+	constexpr float test_pattern = 42.0f;
 	ASSERT_NO_THROW(
 		launch_memory_pattern_kernel(d_data, size, test_pattern));
 
@@ -295,8 +295,8 @@ TEST_F(CudaLinkingTest, KernelExecution)
  */
 TEST_F(CudaLinkingTest, AdvancedKernelFeatures)
 {
-	const int size = TEST_ARRAY_SIZE;
-	const size_t bytes = size * sizeof(float);
+	constexpr int size = TEST_ARRAY_SIZE;
+	constexpr size_t bytes = size * sizeof(float);
 
 	std::vector<float> h_data(size);
 	for (int i = 0; i < size; ++i) {
