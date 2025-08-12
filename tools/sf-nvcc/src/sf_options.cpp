@@ -100,8 +100,17 @@ safecuda::tools::parse_command_line(const int argc, char *argv[])
 				else
 					throw std::invalid_argument(
 						bad_value(arg, val));
-			} else if (arg == "-sf-logging") {
-				options.safecuda_opts.log_violations = true;
+			} else if (arg == "-sf-log-violations") {
+				if (val == "true")
+					options.safecuda_opts.log_violations =
+						true;
+				else if (val == "false")
+					options.safecuda_opts.log_violations =
+						false;
+				else
+					throw std::invalid_argument(
+						bad_value(arg, val));
+			} else if (arg == "-sf-log-path") {
 				options.safecuda_opts.log_file = val;
 			} else {
 				throw std::invalid_argument(

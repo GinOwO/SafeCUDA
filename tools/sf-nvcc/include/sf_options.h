@@ -35,7 +35,7 @@ struct SafeCudaOptions {
 	size_t cache_size = 1024;
 	bool fail_fast = false;
 	bool log_violations = false;
-	std::string log_file{};
+	std::string log_file{"stderr"};
 };
 
 /**

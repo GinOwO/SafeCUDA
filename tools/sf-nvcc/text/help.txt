@@ -39,8 +39,13 @@ SAFECUDA OPTIONS
         Abort kernel execution on first bounds violation (default: false)
         When false, violations are logged but execution continues
 
-    -sf-logging <path>
+    -sf-log-violations <true|false>
+        Set if violations should be logged or not (default: false)
+        Logs are outputted to path specified by -sf-log-path
+
+    -sf-log-path <path>
         Log bounds violations to specified file (default: stderr)
+        Only logs if -sf-log-violations is set to true
 
 NVCC COMPATIBILITY
     All standard nvcc options are passed through unchanged. sf-nvcc acts as a
