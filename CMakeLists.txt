@@ -4,7 +4,7 @@ set(CMAKE_CUDA_COMPILER "/usr/local/cuda/bin/nvcc")
 set(CMAKE_CUDA_ARCHITECTURES 52 60 61 75 86)
 
 set(PROJECT_VERSION_MAJOR 0)
-set(PROJECT_VERSION_MINOR 2)
+set(PROJECT_VERSION_MINOR 3)
 set(PROJECT_VERSION_PATCH 0)
 set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 
@@ -56,6 +56,10 @@ set_target_properties(safecuda PROPERTIES
 target_compile_options(safecuda PRIVATE
         $<$<COMPILE_LANGUAGE:CUDA>:--extended-lambda>
         $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
+)
+
+target_compile_definitions(safecuda PRIVATE
+        PROJECT_VERSION="${PROJECT_VERSION}"
 )
 
 # Tools ------------------------------------------------------------------------
