@@ -8,12 +8,6 @@ N_JOBS=${2:-$(nproc)}
 export PATH=/usr/local/cuda/bin:$PATH
 export NVCC_CCBIN="/usr/local/cuda/bin/g++"
 
-if [[ "$BUILD_TYPE" != "Debug" && "$BUILD_TYPE" != "Release" ]]; then
-        echo "Error: Build type must be 'Debug' or 'Release'"
-        echo "Usage: $0 [Debug|Release]"
-        exit 1
-fi
-
 echo "Building SafeCUDA in $BUILD_TYPE mode..."
 
 if ! command -v nvcc &>/dev/null; then
@@ -25,15 +19,15 @@ fi
 echo "Using CUDA compiler: $(which nvcc)"
 echo "CUDA version: $(nvcc --version | grep release)"
 
-mkdir -p "$BUILD_DIR"
+mkdir -p "$BUILD_DIR/examples"
 
 cmake -G Ninja \
-        -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
         -DCMAKE_CUDA_HOST_COMPILER="$NVCC_CCBIN" \
         -DCMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets" \
-      -B "$BUILD_DIR"
+        -DCUDA_TOOLKIT_ROOT_DIR="/usr/local/cuda" \
+      -S examples \
+      -B "$BUILD_DIR/examples"
 
-ninja -C "$BUILD_DIR" -j"$N_JOBS"
+ninja -C "$BUILD_DIR/examples" -j"$N_JOBS"
 
-echo "Build complete! Binaries are in $BUILD_DIR/"
-echo "Run tests by running ctest in $BUILD_DIR/ or with the test script."
+echo "Examples built! Binaries are in $BUILD_DIR/"
