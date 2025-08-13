@@ -65,7 +65,7 @@ TEST_F(SfNvccParsingTest, BadValueFormatting)
  */
 TEST_F(SfNvccParsingTest, BooleanOptionParsing)
 {
-	safecuda::tools::SfNvccOptions options;
+	safecuda::tools::sf_nvcc::SfNvccOptions options;
 
 	const std::string val_true = "true";
 	if (val_true == "true")
@@ -90,7 +90,7 @@ TEST_F(SfNvccParsingTest, BooleanOptionParsing)
  */
 TEST_F(SfNvccParsingTest, InvalidBooleanValueThrows)
 {
-	safecuda::tools::SfNvccOptions options;
+	safecuda::tools::sf_nvcc::SfNvccOptions options;
 	const std::string arg = "-sf-bounds-check";
 	const std::string invalid_val = "uwu";
 
@@ -117,7 +117,7 @@ TEST_F(SfNvccParsingTest, InvalidBooleanValueThrows)
  */
 TEST_F(SfNvccParsingTest, NvccArgsCollection)
 {
-	safecuda::tools::SfNvccOptions options;
+	safecuda::tools::sf_nvcc::SfNvccOptions options;
 	const std::vector<std::string> args = {"-O3", "-arch=sm_75",
 					       "kernel.cu"};
 
@@ -140,7 +140,7 @@ TEST_F(SfNvccParsingTest, NvccArgsCollection)
  */
 TEST_F(SfNvccParsingTest, DefaultOptionsValues)
 {
-	const safecuda::tools::SafeCudaOptions opts;
+	const safecuda::tools::sf_nvcc::SafeCudaOptions opts;
 	EXPECT_TRUE(opts.enable_bounds_check);
 	EXPECT_FALSE(opts.enable_debug);
 	EXPECT_FALSE(opts.enable_verbose);
@@ -158,7 +158,7 @@ TEST_F(SfNvccParsingTest, DefaultOptionsValues)
  */
 TEST_F(SfNvccParsingTest, CacheSizeParsing)
 {
-	safecuda::tools::SfNvccOptions options;
+	safecuda::tools::sf_nvcc::SfNvccOptions options;
 	const std::string arg = "-sf-cache-size";
 	const std::string val = "512";
 
@@ -176,7 +176,7 @@ TEST_F(SfNvccParsingTest, CacheSizeParsing)
  */
 TEST_F(SfNvccParsingTest, InvalidCacheSizeThrows)
 {
-	safecuda::tools::SfNvccOptions options;
+	safecuda::tools::sf_nvcc::SfNvccOptions options;
 	const std::string arg = "-sf-cache-size";
 	const std::string invalid_val = "abc";
 
@@ -203,7 +203,7 @@ TEST_F(SfNvccParsingTest, InvalidCacheSizeThrows)
  */
 TEST_F(SfNvccParsingTest, LoggingOptionParsing)
 {
-	safecuda::tools::SfNvccOptions options;
+	safecuda::tools::sf_nvcc::SfNvccOptions options;
 	const std::string arg = "-sf-logging";
 	const std::string val = "/tmp/sf.log";
 
@@ -222,7 +222,7 @@ TEST_F(SfNvccParsingTest, LoggingOptionParsing)
  */
 TEST_F(SfNvccParsingTest, FailFastBooleanParsing)
 {
-	safecuda::tools::SfNvccOptions options;
+	safecuda::tools::sf_nvcc::SfNvccOptions options;
 
 	// true case
 	std::string val_true = "true";
@@ -249,7 +249,7 @@ TEST_F(SfNvccParsingTest, FailFastBooleanParsing)
  */
 TEST_F(SfNvccParsingTest, MultipleSwitchesParsing)
 {
-	safecuda::tools::SfNvccOptions options;
+	safecuda::tools::sf_nvcc::SfNvccOptions options;
 
 	const std::vector<std::string> args = {"-sf-bounds-check",
 					       "false",

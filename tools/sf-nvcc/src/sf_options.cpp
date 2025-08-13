@@ -27,21 +27,23 @@ static constexpr int MAX_HELP_TEXT_LEN = 4096;
 
 static inline std::string missing_input(const std::string &arg)
 {
-	return ACOL(ACOL_R,
-		    ACOL_DF) "sf-nvcc parse error:" ACOL_RESET() "Missing argument for sf-nvcc argument: \"" +
+	return ACOL(ACOL_K, ACOL_DF) ACOL(
+		       ACOL_R,
+		       ACOL_BB) "sf-nvcc parse error:" ACOL_RESET() "Missing argument for sf-nvcc argument: \"" +
 	       arg + "\"\n";
 }
 
 static inline std::string bad_value(const std::string &arg,
 				    const std::string &val)
 {
-	return ACOL(ACOL_R,
-		    ACOL_DF) "sf-nvcc parse error:" ACOL_RESET() " Malformed value for sf-nvcc argument: \"" +
+	return ACOL(ACOL_K, ACOL_DF) ACOL(
+		       ACOL_R,
+		       ACOL_BB) "sf-nvcc parse error:" ACOL_RESET() " Malformed value for sf-nvcc argument: \"" +
 	       arg + "\" does not accept \"" + val + "\"\n";
 }
 
-safecuda::tools::SfNvccOptions
-safecuda::tools::parse_command_line(const int argc, char *argv[])
+safecuda::tools::sf_nvcc::SfNvccOptions
+safecuda::tools::sf_nvcc::parse_command_line(const int argc, char *argv[])
 {
 	SfNvccOptions options;
 	int arg_pos = 1;
@@ -129,7 +131,7 @@ safecuda::tools::parse_command_line(const int argc, char *argv[])
 	return options;
 }
 
-void safecuda::tools::print_help()
+void safecuda::tools::sf_nvcc::print_help()
 {
 	std::string out(MAX_HELP_TEXT_LEN, '\0');
 	z_stream zs{};
@@ -150,7 +152,7 @@ void safecuda::tools::print_help()
 	std::cout << out << '\n';
 }
 
-inline void safecuda::tools::print_version()
+inline void safecuda::tools::sf_nvcc::print_version()
 {
 	std::cout << ACOL(ACOL_G, ACOL_BB)
 			     ACOL(ACOL_W, ACOL_DF) "SafeCUDA Version: "

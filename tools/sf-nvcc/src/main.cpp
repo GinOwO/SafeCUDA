@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
 {
 	try {
 		auto [safecuda_opts, nvcc_args] =
-			tools::parse_command_line(argc, argv);
+			tools::sf_nvcc::parse_command_line(argc, argv);
 		if (safecuda_opts.enable_verbose) {
 			const auto &[enable_bounds_check, enable_debug,
 				     enable_verbose, cache_size, fail_fast,
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 			std::cout << "\n";
 		}
 	} catch (std::invalid_argument &e) {
-		std::cerr << e.what();
+		std::cerr << e.what() << '\n';
 	}
 
 	return EXIT_SUCCESS;

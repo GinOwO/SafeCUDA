@@ -39,7 +39,7 @@
 #define ACOL_C "6"
 #define ACOL_W "7"
 
-namespace safecuda::tools
+namespace safecuda::tools::sf_nvcc
 {
 /**
  * @brief Configuration options for SafeCUDA PTX modification
