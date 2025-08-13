@@ -31,7 +31,9 @@ int main(int argc, char *argv[])
 			const auto &[enable_bounds_check, enable_debug,
 				     enable_verbose, cache_size, fail_fast,
 				     log_violations, log_file] = safecuda_opts;
-			std::cout << "\033[93msf-nvcc options:\033[0m\n\t"
+			std::cout << ACOL(ACOL_Y, ACOL_BB)
+				  << ACOL(ACOL_K, ACOL_DF)
+				  << "sf-nvcc options:" ACOL_RESET() "\n\t"
 				  << "enable_bounds_check: " << std::boolalpha
 				  << enable_bounds_check << "\n\t"
 				  << "enable_debug: " << enable_debug << "\n\t"

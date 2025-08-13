@@ -21,6 +21,24 @@
 #include <string>
 #include <vector>
 
+// ANSI COLOR BUILDER
+#define ACOL(C, TB) "\033[" TB C "m"
+#define ACOL_RESET() "\033[0m"
+
+#define ACOL_DF "3"
+#define ACOL_BF "9"
+#define ACOL_DB "4"
+#define ACOL_BB "10"
+
+#define ACOL_K "0"
+#define ACOL_R "1"
+#define ACOL_G "2"
+#define ACOL_Y "3"
+#define ACOL_BL "4"
+#define ACOL_M "5"
+#define ACOL_C "6"
+#define ACOL_W "7"
+
 namespace safecuda::tools
 {
 /**

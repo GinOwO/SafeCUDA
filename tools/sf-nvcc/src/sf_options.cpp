@@ -27,14 +27,16 @@ static constexpr int MAX_HELP_TEXT_LEN = 4096;
 
 static inline std::string missing_input(const std::string &arg)
 {
-	return "\033[31msf-nvcc parse error:\033[0m Missing argument for sf-nvcc argument: \"" +
+	return ACOL(ACOL_R,
+		    ACOL_DF) "sf-nvcc parse error:" ACOL_RESET() "Missing argument for sf-nvcc argument: \"" +
 	       arg + "\"\n";
 }
 
 static inline std::string bad_value(const std::string &arg,
 				    const std::string &val)
 {
-	return "\033[31msf-nvcc parse error:\033[0m Malformed value for sf-nvcc argument: \"" +
+	return ACOL(ACOL_R,
+		    ACOL_DF) "sf-nvcc parse error:" ACOL_RESET() " Malformed value for sf-nvcc argument: \"" +
 	       arg + "\" does not accept \"" + val + "\"\n";
 }
 
@@ -150,5 +152,7 @@ void safecuda::tools::print_help()
 
 inline void safecuda::tools::print_version()
 {
-	std::cout << "SafeCUDA Version: " << PROJECT_VERSION << "\n";
+	std::cout << ACOL(ACOL_G, ACOL_BB)
+			     ACOL(ACOL_W, ACOL_DF) "SafeCUDA Version: "
+		  << PROJECT_VERSION << ACOL_RESET() "\n";
 }
