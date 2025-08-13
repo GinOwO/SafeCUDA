@@ -11,6 +11,12 @@ add_custom_command(
         COMMENT "Compressing and embedding help.txt"
 )
 
+execute_process(
+        COMMAND wc -m ${CMAKE_CURRENT_SOURCE_DIR}/text/help.txt
+        OUTPUT_VARIABLE HELP_TEXT_LEN
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
 add_library(sf-nvcc-lib SHARED
         src/nvcc_wrapper.cpp
         src/ptx_modifier.cpp
@@ -35,4 +41,5 @@ target_compile_definitions(sf-nvcc-lib PRIVATE
         PROJECT_VERSION_MINOR="${PROJECT_VERSION_MINOR}"
         PROJECT_VERSION_PATCH="${PROJECT_VERSION_PATCH}"
         PROJECT_VERSION="${PROJECT_VERSION}"
+        HELP_TEXT_LEN="${HELP_TEXT_LEN}"
 )

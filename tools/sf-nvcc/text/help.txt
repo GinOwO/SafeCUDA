@@ -2,15 +2,16 @@ sf-nvcc - SafeCUDA NVCC wrapper for GPU memory safety
 
 DESCRIPTION
     sf-nvcc is a drop-in replacement for nvcc that automatically injects
-    bounds checking into CUDA kernels. It intercepts compilation, modifies
-    PTX assembly to add memory safety checks, and produces binaries with
-    spatial memory violation detection.
+    bounds checking into CUDA kernels with the help of sf-nvcc. It intercepts
+    compilation, modifies PTX assembly to add memory safety checks, and produces
+    binaries with spatial memory violation detection.
 
 USAGE
-    sf-nvcc [-sf-version] [-sf-help] [-sf-bounds-check <true|false>]
-            [-sf-debug <true|false>] [-sf-verbose <true|false>]
-            [-sf-cache-size <value>] [-sf-fail-fast <true|false>]
-            [-sf-logging <path>] <nvcc args>
+    sf-nvcc [-sf-version] [-sf-help] [-sf-bounds-check <TRUE|false>]
+            [-sf-debug <true|FALSE>] [-sf-verbose <true|FALSE>]
+            [-sf-cache-size <value>] [-sf-fail-fast <true|FALSE>]
+            [-sf-log-violations <true|FALSE>] [-sf-log-path <path>]
+            [-sf-keep-dir <path>] <nvcc args>
 
 SAFECUDA OPTIONS
     -sf-help
@@ -19,33 +20,37 @@ SAFECUDA OPTIONS
     -sf-version
         Display sf-nvcc version and applicable SafeCUDA build info.
 
-    -sf-bounds-check <true|false>
+    -sf-bounds-check <TRUE|false>
         Enable or disable spatial memory bounds checking injection (default: true)
         When enabled, PTX is modified to validate all global memory accesses
 
-    -sf-debug <true|false>
+    -sf-debug <true|FALSE>
         Enable debug mode with detailed PTX modification logging (default: false)
         Shows which instructions are being instrumented and metadata operations
+        If enabled also enables verbose.
 
-    -sf-verbose <true|false>
+    -sf-verbose <true|FALSE>
         Enable verbose compilation output (default: false)
         Displays arguments, PTX generation, modification steps, and compilation progress
 
     -sf-cache-size <value>
-        Set shared memory cache size for metadata in bytes (default: 256)
+        Set shared memory cache size for metadata in bytes (default: 1024)
         Larger caches improve performance but use more shared memory per block
 
-    -sf-fail-fast <true|false>
+    -sf-fail-fast <true|FALSE>
         Abort kernel execution on first bounds violation (default: false)
         When false, violations are logged but execution continues
 
-    -sf-log-violations <true|false>
+    -sf-log-violations <true|FALSE>
         Set if violations should be logged or not (default: false)
         Logs are outputted to path specified by -sf-log-path
 
     -sf-log-path <path>
         Log bounds violations to specified file (default: stderr)
         Only logs if -sf-log-violations is set to true
+
+    -sf-keep-dir <path>
+        Path to store intermediate files (default: system temp dir)
 
 NVCC COMPATIBILITY
     All standard nvcc options are passed through unchanged. sf-nvcc acts as a

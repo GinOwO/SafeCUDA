@@ -14,6 +14,7 @@
  * - 2025-08-12: Initial File
  */
 
+#include "nvcc_wrapper.h"
 #include "sf_options.h"
 
 #include <iostream>
@@ -27,10 +28,13 @@ int main(int argc, char *argv[])
 	try {
 		auto [safecuda_opts, nvcc_args] =
 			tools::sf_nvcc::parse_command_line(argc, argv);
+		safecuda::tools::sf_nvcc::TemporaryFileManager temp_mgr(
+			safecuda_opts);
 		if (safecuda_opts.enable_verbose) {
 			const auto &[enable_bounds_check, enable_debug,
 				     enable_verbose, cache_size, fail_fast,
-				     log_violations, log_file] = safecuda_opts;
+				     log_violations, log_file, keep_dir,
+				     output_path] = safecuda_opts;
 			std::cout << ACOL(ACOL_Y, ACOL_BB)
 				  << ACOL(ACOL_K, ACOL_DF)
 				  << "sf-nvcc options:" ACOL_RESET() "\n\t"
@@ -46,13 +50,24 @@ int main(int argc, char *argv[])
 				  << "log_file: "
 				  << (log_file.empty() ? "<none>" : log_file)
 				  << "\n\t"
+				  << "keep_dir: " << keep_dir << "\n\t"
+				  << "output_path: " << output_path << "\n\t"
 				  << "nvcc_args: \n\t\t";
 			for (const auto &arg : nvcc_args)
 				std::cout << arg << "\n\t\t";
 			std::cout << "\n";
 		}
+		safecuda::tools::sf_nvcc::generate_intermediate(
+			nvcc_args, safecuda_opts, temp_mgr);
+		for (auto s : temp_mgr.filter_ptx_paths()) {
+			std::cout << s << '\n';
+		}
 	} catch (std::invalid_argument &e) {
 		std::cerr << e.what() << '\n';
+		return EXIT_FAILURE;
+	} catch (std::runtime_error &e) {
+		std::cerr << e.what() << '\n';
+		return EXIT_FAILURE;
 	}
 
 	return EXIT_SUCCESS;

@@ -31,6 +31,7 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
 endif ()
 
 option(BUILD_SAFECUDA_TOOLS "Build SafeCUDA tools (sf-nvcc)" ON)
+option(BUILD_SAFECUDA_EXAMPLES "Build SafeCUDA examples" ON)
 
 # Build libsafecuda ------------------------------------------------------------
 add_library(safecuda SHARED
@@ -65,6 +66,12 @@ target_compile_definitions(safecuda PRIVATE
 if (BUILD_SAFECUDA_TOOLS)
     message(STATUS "Building SafeCUDA tools")
     add_subdirectory(tools)
+endif ()
+
+# Examples ---------------------------------------------------------------------
+if (BUILD_SAFECUDA_EXAMPLES)
+    message(STATUS "Building Examples")
+    add_subdirectory(examples)
 endif ()
 
 # Tests ------------------------------------------------------------------------

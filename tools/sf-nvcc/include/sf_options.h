@@ -8,11 +8,12 @@
  *
  * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
  * @date 2025-08-13
- * @version 0.0.1
+ * @version 0.0.2
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  *
  * Change Log:
  * - 2025-08-13: Initial File
+ * - 2025-08-13: Added output file switch
  */
 
 #ifndef SAFECUDA_SF_OPTIONS_H
@@ -47,13 +48,15 @@ namespace safecuda::tools::sf_nvcc
  * Holds all SafeCUDA-specific options parsed from -sf-* command line arguments.
  */
 struct SafeCudaOptions {
-	bool enable_bounds_check = true;
-	bool enable_debug = false;
-	bool enable_verbose = false;
-	size_t cache_size = 1024;
-	bool fail_fast = false;
-	bool log_violations = false;
-	std::string log_file{"stderr"};
+	bool enable_bounds_check = true; ///< Enable runtime bounds checking.
+	bool enable_debug = false; ///< Enable debug instrumentation.
+	bool enable_verbose = false; ///< Enable verbose logging.
+	size_t cache_size = 1024; ///< Cache size in KB.
+	bool fail_fast = false; ///< Abort on first violation.
+	bool log_violations = false; ///< Log memory violations.
+	std::string log_file{"stderr"}; ///< Path for violation logs.
+	std::string keep_dir; ///< Directory to store intermediate files.
+	std::string output_path; ///< Directory to store final output
 };
 
 /**
@@ -62,8 +65,8 @@ struct SafeCudaOptions {
  * Contains both SafeCUDA-specific options and standard NVCC arguments.
  */
 struct SfNvccOptions {
-	SafeCudaOptions safecuda_opts;
-	std::vector<std::string> nvcc_args;
+	SafeCudaOptions safecuda_opts; ///< SafeCUDA-specific options.
+	std::vector<std::string> nvcc_args; ///< Remaining NVCC arguments.
 };
 
 /**
@@ -76,20 +79,18 @@ struct SfNvccOptions {
  * @param argv Array of command line argument strings
  * @return SfNvccOptions Parsed options structure
  * @throws std::invalid_argument for malformed SafeCUDA options
+ *
+ * @note --keep, --keep-dir, -c, --ptx to nvcc are ignored
  */
 SfNvccOptions parse_command_line(int argc, char *argv[]);
 
 /**
- * @brief Display help information for sf-nvcc usage
- *
- * Shows SafeCUDA-specific options and general usage information.
+ * @brief Print sf-nvcc help text.
  */
 void print_help();
 
 /**
- * @brief Display sf-nvcc version and build information
- *
- * Shows SafeCUDA version, build date, and supported CUDA architectures.
+ * @brief Print sf-nvcc version info.
  */
 void print_version();
 

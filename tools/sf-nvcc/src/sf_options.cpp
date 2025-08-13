@@ -8,22 +8,29 @@
  *
  * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
  * @date 2025-08-13
- * @version 0.0.1
+ * @version 0.0.2
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  *
  * Change Log:
  * - 2025-08-13: Initial File
+ * - 2025-08-13: Enabling debug also now enables verbose, added output switch
  */
 
 #include "sf_options.h"
 
-#include <zlib.h>
-#include <stdexcept>
+#include <cstdio>
+#include <cstdlib>
 #include <iostream>
+#include <stdexcept>
+#include <utility>
+#include <filesystem>
+
+#include <zlib.h>
+
+namespace sf_nvcc = safecuda::tools::sf_nvcc;
 
 extern unsigned char help_txt_gz[];
 extern unsigned int help_txt_gz_len;
-static constexpr int MAX_HELP_TEXT_LEN = 4096;
 
 static inline std::string missing_input(const std::string &arg)
 {
@@ -42,8 +49,26 @@ static inline std::string bad_value(const std::string &arg,
 	       arg + "\" does not accept \"" + val + "\"\n";
 }
 
-safecuda::tools::sf_nvcc::SfNvccOptions
-safecuda::tools::sf_nvcc::parse_command_line(const int argc, char *argv[])
+/* Sample nvcc command
+nvcc \
+	-g -G -O0 -Xcompiler -fPIC \
+	-Xptxas -O0 \
+	-Wno-deprecated-gpu-targets \
+	--extended-lambda \
+	--expt-relaxed-constexpr \
+	--generate-code arch=compute_52,code=sm_52 \
+	--generate-code arch=compute_60,code=sm_60 \
+	--generate-code arch=compute_61,code=sm_61 \
+	--generate-code arch=compute_75,code=sm_75 \
+	--generate-code arch=compute_86,code=sm_86 \
+	-rdc=true \
+	examples/example.cpp \
+	examples/kernel1.cu \
+	examples/kernel2.cu \
+	-o example
+ */
+
+sf_nvcc::SfNvccOptions sf_nvcc::parse_command_line(const int argc, char *argv[])
 {
 	SfNvccOptions options;
 	int arg_pos = 1;
@@ -116,6 +141,8 @@ safecuda::tools::sf_nvcc::parse_command_line(const int argc, char *argv[])
 						bad_value(arg, val));
 			} else if (arg == "-sf-log-path") {
 				options.safecuda_opts.log_file = val;
+			} else if (arg == "-sf-keep-dir") {
+				options.safecuda_opts.keep_dir = val;
 			} else {
 				throw std::invalid_argument(
 					std::string{"Invalid argument: "} +
@@ -123,17 +150,47 @@ safecuda::tools::sf_nvcc::parse_command_line(const int argc, char *argv[])
 			}
 
 		} else {
-			options.nvcc_args.emplace_back(arg);
+			if (arg == "-o") {
+				if (++arg_pos >= argc) {
+					throw missing_input("-o");
+				}
+				options.safecuda_opts.output_path =
+					std::string(argv[arg_pos]);
+			} else if (!(arg.starts_with("--keep") || arg == "-c" ||
+				     arg == "--ptx"))
+				options.nvcc_args.emplace_back(arg);
 		}
 		arg_pos++;
 	}
 
+	if (options.safecuda_opts.keep_dir.empty()) {
+#if defined(__unix__) || defined(__APPLE__) || defined(__linux__)
+		char tmpl[] = "/tmp/sf-nvccXXXXXX";
+		const int fd = mkstemp(tmpl);
+		if (fd == -1)
+			throw std::runtime_error("mkstemp failed");
+		close(fd);
+		std::string path(tmpl);
+		std::filesystem::remove(path);
+#else
+		char buf[L_tmpnam];
+		if (tmpnam(buf) == nullptr)
+			throw std::runtime_error("tmpnam failed");
+		std::string path(buf);
+		path = std::filesystem::temp_directory_path() / path;
+#endif
+		options.safecuda_opts.keep_dir = path;
+	}
+
+	if (options.safecuda_opts.enable_debug)
+		options.safecuda_opts.enable_verbose = true;
+
 	return options;
 }
 
-void safecuda::tools::sf_nvcc::print_help()
+void sf_nvcc::print_help()
 {
-	std::string out(MAX_HELP_TEXT_LEN, '\0');
+	std::string out(HELP_TEXT_LEN, '\0');
 	z_stream zs{};
 	zs.next_in = help_txt_gz;
 	zs.avail_in = help_txt_gz_len;
@@ -152,7 +209,7 @@ void safecuda::tools::sf_nvcc::print_help()
 	std::cout << out << '\n';
 }
 
-inline void safecuda::tools::sf_nvcc::print_version()
+inline void sf_nvcc::print_version()
 {
 	std::cout << ACOL(ACOL_G, ACOL_BB)
 			     ACOL(ACOL_W, ACOL_DF) "SafeCUDA Version: "
