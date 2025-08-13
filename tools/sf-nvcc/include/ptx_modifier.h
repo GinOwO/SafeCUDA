@@ -14,7 +14,7 @@
  * - 2025-08-12: Initial File
  */
 
-#ifndef PTX_MODIFIER_H
-#define PTX_MODIFIER_H
+#ifndef SAFECUDA_PTX_MODIFIER_H
+#define SAFECUDA_PTX_MODIFIER_H
 
-#endif //PTX_MODIFIER_H
+#endif // SAFECUDA_PTX_MODIFIER_H

@@ -20,5 +20,13 @@ target_link_libraries(safecuda_tests
         GTest::Main
 )
 
+target_compile_definitions(safecuda_tests PRIVATE
+        PROJECT_VERSION_MAJOR="${PROJECT_VERSION_MAJOR}"
+        PROJECT_VERSION_MINOR="${PROJECT_VERSION_MINOR}"
+        PROJECT_VERSION_PATCH="${PROJECT_VERSION_PATCH}"
+        PROJECT_VERSION="${PROJECT_VERSION}"
+)
+
+
 include(GoogleTest)
 gtest_discover_tests(safecuda_tests)

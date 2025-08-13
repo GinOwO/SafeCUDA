@@ -15,8 +15,8 @@
  * - 2025-08-13: Initial File
  */
 
-#ifndef SF_OPTIONS_H
-#define SF_OPTIONS_H
+#ifndef SAFECUDA_SF_OPTIONS_H
+#define SAFECUDA_SF_OPTIONS_H
 
 #include <string>
 #include <vector>
@@ -95,4 +95,4 @@ void print_version();
 
 } // namespace safecuda::tools
 
-#endif // SF_OPTIONS_H
+#endif // SAFECUDA_SF_OPTIONS_H

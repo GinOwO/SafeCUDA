@@ -30,6 +30,9 @@ set_target_properties(sf-nvcc PROPERTIES
         CXX_STANDARD 23
 )
 
-target_compile_definitions(sf-nvcc-lib PUBLIC
+target_compile_definitions(sf-nvcc-lib PRIVATE
+        PROJECT_VERSION_MAJOR="${PROJECT_VERSION_MAJOR}"
+        PROJECT_VERSION_MINOR="${PROJECT_VERSION_MINOR}"
+        PROJECT_VERSION_PATCH="${PROJECT_VERSION_PATCH}"
         PROJECT_VERSION="${PROJECT_VERSION}"
 )
