@@ -17,4 +17,8 @@
 #ifndef SAFECUDA_PATTERN_MATCHER_H
 #define SAFECUDA_PATTERN_MATCHER_H
 
+namespace safecuda::tools::sf_nvcc
+{
+} // namespace safecuda::tools::sf_nvcc
+
 #endif // SAFECUDA_PATTERN_MATCHER_H

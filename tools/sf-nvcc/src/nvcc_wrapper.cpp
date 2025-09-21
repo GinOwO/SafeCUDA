@@ -11,8 +11,8 @@
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  *
  * Change Log:
- * - 2025-08-12: Initial File
  * - 2025-08-13: Initial Implementation
+ * - 2025-08-12: Initial File
  */
 
 #include "nvcc_wrapper.h"

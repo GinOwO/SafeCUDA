@@ -12,8 +12,8 @@
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  *
  * Change Log:
- * - 2025-08-13: Initial File
  * - 2025-08-13: Added output file switch
+ * - 2025-08-13: Initial File
  */
 
 #ifndef SAFECUDA_SF_OPTIONS_H
