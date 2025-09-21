@@ -1,5 +1,5 @@
 /**
- * @file sf_nvcc_parsing_tests.h
+ * @file test_sf_nvcc_parsing.h
  * @brief Test sf-nvcc argument parsing
  *
  * Contains test fixture class and helper methods for testing
@@ -7,15 +7,16 @@
  *
  * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
  * @date 2025-08-13
- * @version 0.0.1
+ * @version 0.0.2
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  *
  * Change Log:
+ * - 2025-09-22: Renamed File to be style compliant
  * - 2025-08-13: Initial implementation with Google Test
  */
 
-#ifndef SF_NVCC_PARSING_TESTS_H
-#define SF_NVCC_PARSING_TESTS_H
+#ifndef TEST_SF_NVCC_PARSING_H
+#define TEST_SF_NVCC_PARSING_H
 
 #include <gtest/gtest.h>
 
@@ -29,4 +30,4 @@ class SfNvccParsingTest : public ::testing::Test {
 
 }
 
-#endif //SF_NVCC_PARSING_TESTS_H
+#endif //TEST_SF_NVCC_PARSING_H

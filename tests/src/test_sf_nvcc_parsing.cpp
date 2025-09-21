@@ -1,5 +1,5 @@
 /**
- * @file sf_nvcc_parsing_tests.cpp
+ * @file test_sf_nvcc_parsing.cpp
  * @brief Test sf-nvcc argument parsing
  *
  * Implements test setup, teardown, and unit tests verifying
@@ -8,14 +8,15 @@
  *
  * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
  * @date 2025-08-13
- * @version 0.0.1
+ * @version 0.0.2
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  *
  * Change Log:
+ * - 2025-09-22: Renamed File to be style compliant
  * - 2025-08-13: Initial implementation with Google Test
  */
 
-#include "sf_nvcc_parsing_tests.h"
+#include "test_sf_nvcc_parsing.h"
 #include "sf_options.h"
 
 using namespace sf_nvcc_parsing_tests;
