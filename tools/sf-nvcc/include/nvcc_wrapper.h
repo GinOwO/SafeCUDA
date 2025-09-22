@@ -129,7 +129,7 @@ void generate_intermediate(const std::vector<std::string> &nvcc_args,
  *
  * @throws std::runtime_error if PTX parsing fails or modification generates invalid code
  * @throws std::filesystem::filesystem_error if modified files cannot be written
- * @note Original files are preserved with "og_" prefix for debugging if sf_opts.enable_debug is true
+ * @note Original files are preserved with .bak suffix for debugging if sf_opts.enable_debug is true
  */
 PtxModificationResult modify_ptx(const std::filesystem::path &ptx_path,
 				 const SafeCudaOptions &sf_opts);

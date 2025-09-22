@@ -9,9 +9,8 @@ DESCRIPTION
 USAGE
     sf-nvcc [-sf-version] [-sf-help] [-sf-bounds-check <TRUE|false>]
             [-sf-debug <true|FALSE>] [-sf-verbose <true|FALSE>]
-            [-sf-cache-size <value>] [-sf-fail-fast <true|FALSE>]
-            [-sf-log-violations <true|FALSE>] [-sf-log-path <path>]
-            [-sf-keep-dir <path>] <nvcc args>
+            [-sf-fail-fast <true|FALSE>] [-sf-log-violations <true|FALSE>]
+            [-sf-log-path <path>] [-sf-keep-dir <path>] <nvcc args>
 
 SAFECUDA OPTIONS
     -sf-help
@@ -32,10 +31,6 @@ SAFECUDA OPTIONS
     -sf-verbose <true|FALSE>
         Enable verbose compilation output (default: false)
         Displays arguments, PTX generation, modification steps, and compilation progress
-
-    -sf-cache-size <value>
-        Set shared memory cache size for metadata in bytes (default: 1024)
-        Larger caches improve performance but use more shared memory per block
 
     -sf-fail-fast <true|FALSE>
         Abort kernel execution on first bounds violation (default: false)
