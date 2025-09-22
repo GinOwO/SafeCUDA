@@ -47,15 +47,15 @@ TEST_F(SfNvccParsingTest, MissingInputFormatting)
  */
 TEST_F(SfNvccParsingTest, BadValueFormatting)
 {
-	const std::string arg = "-sf-cache-size";
-	const std::string val = "not-a-number";
+	const std::string arg = "-sf-enable-debug";
+	const std::string val = "not-a-bool";
 	const std::string expected =
 		"\033[31msf-nvcc parse error:\033[0m Malformed value for sf-nvcc argument: \"" +
 		arg + "\" does not accept \"" + val + "\"\n";
 
 	EXPECT_EQ(
 		expected,
-		"\033[31msf-nvcc parse error:\033[0m Malformed value for sf-nvcc argument: \"-sf-cache-size\" does not accept \"not-a-number\"\n");
+		"\033[31msf-nvcc parse error:\033[0m Malformed value for sf-nvcc argument: \"-sf-enable-debug\" does not accept \"not-a-bool\"\n");
 }
 
 /**
@@ -145,55 +145,9 @@ TEST_F(SfNvccParsingTest, DefaultOptionsValues)
 	EXPECT_TRUE(opts.enable_bounds_check);
 	EXPECT_FALSE(opts.enable_debug);
 	EXPECT_FALSE(opts.enable_verbose);
-	EXPECT_EQ(opts.cache_size, 1024);
 	EXPECT_FALSE(opts.fail_fast);
 	EXPECT_FALSE(opts.log_violations);
 	EXPECT_EQ(opts.log_file, "stderr");
-}
-
-/**
- * @brief Tests parsing of integer cache size argument
- *
- * Verifies that a valid integer string for -sf-cache-size
- * correctly sets the cache_size option.
- */
-TEST_F(SfNvccParsingTest, CacheSizeParsing)
-{
-	safecuda::tools::sf_nvcc::SfNvccOptions options;
-	const std::string arg = "-sf-cache-size";
-	const std::string val = "512";
-
-	int parsed_val = std::stoi(val);
-	options.safecuda_opts.cache_size = parsed_val;
-
-	EXPECT_EQ(options.safecuda_opts.cache_size, 512);
-}
-
-/**
- * @brief Tests error detection on invalid integer argument value
- *
- * Simulates parsing a non-integer string for -sf-cache-size
- * and expects std::invalid_argument exception.
- */
-TEST_F(SfNvccParsingTest, InvalidCacheSizeThrows)
-{
-	safecuda::tools::sf_nvcc::SfNvccOptions options;
-	const std::string arg = "-sf-cache-size";
-	const std::string invalid_val = "abc";
-
-	auto parse_invalid = [&]() {
-		try {
-			options.safecuda_opts.cache_size =
-				std::stoi(invalid_val);
-		} catch (const std::invalid_argument &) {
-			throw std::invalid_argument(
-				"\033[31msf-nvcc parse error:\033[0m Malformed value for sf-nvcc argument: \"" +
-				arg + "\" does not accept \"" + invalid_val +
-				"\"\n");
-		}
-	};
-
-	EXPECT_THROW(parse_invalid(), std::invalid_argument);
 }
 
 /**
@@ -256,8 +210,6 @@ TEST_F(SfNvccParsingTest, MultipleSwitchesParsing)
 					       "false",
 					       "-sf-debug",
 					       "true",
-					       "-sf-cache-size",
-					       "2048",
 					       "-sf-fail-fast",
 					       "true",
 					       "-sf-logging",
@@ -281,8 +233,6 @@ TEST_F(SfNvccParsingTest, MultipleSwitchesParsing)
 				options.safecuda_opts.enable_debug = true;
 			else if (val == "false")
 				options.safecuda_opts.enable_debug = false;
-		} else if (arg == "-sf-cache-size") {
-			options.safecuda_opts.cache_size = std::stoi(args[++i]);
 		} else if (arg == "-sf-fail-fast") {
 			const std::string &val = args[++i];
 			if (val == "true")
@@ -299,7 +249,6 @@ TEST_F(SfNvccParsingTest, MultipleSwitchesParsing)
 
 	EXPECT_FALSE(options.safecuda_opts.enable_bounds_check);
 	EXPECT_TRUE(options.safecuda_opts.enable_debug);
-	EXPECT_EQ(options.safecuda_opts.cache_size, 2048);
 	EXPECT_TRUE(options.safecuda_opts.fail_fast);
 	EXPECT_TRUE(options.safecuda_opts.log_violations);
 	EXPECT_EQ(options.safecuda_opts.log_file, "/var/log/sf.log");

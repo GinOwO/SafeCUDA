@@ -46,7 +46,7 @@ struct Instruction {
  * @param path String containing the path to the PTX file
  * @return Vector<Instructions> containing all lexemes of relevant lines.
  *
- * @throws std::runtime_error if cannot open file at path
+ * @throws std::runtime_error if it cannot open file at path
  */
 std::vector<struct Instruction> find_all_ptx(std::string_view path);
 

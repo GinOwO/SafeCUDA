@@ -51,7 +51,6 @@ struct SafeCudaOptions {
 	bool enable_bounds_check = true; ///< Enable runtime bounds checking.
 	bool enable_debug = false; ///< Enable debug instrumentation.
 	bool enable_verbose = false; ///< Enable verbose logging.
-	size_t cache_size = 1024; ///< Cache size in KB.
 	bool fail_fast = false; ///< Abort on first violation.
 	bool log_violations = false; ///< Log memory violations.
 	std::string log_file{"stderr"}; ///< Path for violation logs.
@@ -93,6 +92,12 @@ void print_help();
  * @brief Print sf-nvcc version info.
  */
 void print_version();
+
+/**
+ * @brief Print verbose arguments
+ */
+void print_args(const SafeCudaOptions &safecuda_opts,
+		const std::vector<std::string> &nvcc_args);
 
 } // namespace safecuda::tools
 

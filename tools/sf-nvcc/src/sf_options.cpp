@@ -113,14 +113,6 @@ sf_nvcc::SfNvccOptions sf_nvcc::parse_command_line(const int argc, char *argv[])
 				else
 					throw std::invalid_argument(
 						bad_value(arg, val));
-			} else if (arg == "-sf-cache-size") {
-				try {
-					options.safecuda_opts.cache_size =
-						std::stoi(val);
-				} catch (std::invalid_argument &_) {
-					throw std::invalid_argument(
-						bad_value(arg, val));
-				}
 			} else if (arg == "-sf-fail-fast") {
 				if (val == "true")
 					options.safecuda_opts.fail_fast = true;
@@ -152,7 +144,8 @@ sf_nvcc::SfNvccOptions sf_nvcc::parse_command_line(const int argc, char *argv[])
 		} else {
 			if (arg == "-o") {
 				if (++arg_pos >= argc) {
-					throw missing_input("-o");
+					throw std::runtime_error(
+						missing_input("-o"));
 				}
 				options.safecuda_opts.output_path =
 					std::string(argv[arg_pos]);
@@ -214,4 +207,28 @@ inline void sf_nvcc::print_version()
 	std::cout << ACOL(ACOL_G, ACOL_BB)
 			     ACOL(ACOL_W, ACOL_DF) "SafeCUDA Version: "
 		  << PROJECT_VERSION << ACOL_RESET() "\n";
+}
+
+void sf_nvcc::print_args(const struct SafeCudaOptions &safecuda_opts,
+			 const std::vector<std::string> &nvcc_args)
+{
+	const auto &[enable_bounds_check, enable_debug, enable_verbose,
+		     fail_fast, log_violations, log_file, keep_dir,
+		     output_path] = safecuda_opts;
+	std::cout << ACOL(ACOL_Y, ACOL_BB) << ACOL(ACOL_K, ACOL_DF)
+		  << "sf-nvcc options:" ACOL_RESET() "\n\t"
+		  << "enable_bounds_check: " << std::boolalpha
+		  << enable_bounds_check << "\n\t"
+		  << "enable_debug: " << enable_debug << "\n\t"
+		  << "enable_verbose: " << enable_verbose << "\n\t"
+		  << "fail_fast: " << fail_fast << "\n\t"
+		  << "log_violations: " << log_violations << "\n\t"
+		  << "log_file: " << (log_file.empty() ? "<none>" : log_file)
+		  << "\n\t"
+		  << "keep_dir: " << keep_dir << "\n\t"
+		  << "output_path: " << output_path << "\n\t"
+		  << "nvcc_args: \n\t\t";
+	for (const auto &arg : nvcc_args)
+		std::cout << arg << "\n\t\t";
+	std::cout << "\n";
 }

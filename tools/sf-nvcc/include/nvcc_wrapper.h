@@ -145,8 +145,9 @@ PtxModificationResult modify_ptx(const std::filesystem::path &ptx_path,
  * @param nvcc_args NVCC arguments including source files and compilation flags
  * @return true if nvcc completed successfully, false otherwise
  * @throws std::runtime_error if nvcc fails to compile
+ * @throws std::filesystem::filesystem_error if unable find files in paths
  */
-bool resume_nvcc(const std::vector<std::string> &intermediate_paths,
+bool resume_nvcc(const std::vector<std::filesystem::path> &intermediate_paths,
 		 const std::vector<std::string> &nvcc_args);
 
 } // namespace safecuda::tools::sf_nvcc
