@@ -340,7 +340,7 @@ TEST_F(SfNvccPtxInjectionTest, BasicBoundsCheckInsertion)
 	opts.enable_verbose = false;
 	opts.enable_debug = false;
 
-	bool result = sf_nvcc::insert_bounds_check(temp_file, opts);
+	bool result = sf_nvcc::insert_bounds_check(temp_file, opts).success;
 	EXPECT_TRUE(result);
 
 	std::ifstream file(temp_file);
@@ -373,7 +373,7 @@ TEST_F(SfNvccPtxInjectionTest, ComplexInstructionTypeHandling)
 	opts.enable_verbose = false;
 	opts.enable_debug = false;
 
-	bool result = sf_nvcc::insert_bounds_check(temp_file, opts);
+	bool result = sf_nvcc::insert_bounds_check(temp_file, opts).success;
 	EXPECT_TRUE(result);
 
 	std::ifstream file(temp_file);
@@ -417,7 +417,7 @@ TEST_F(SfNvccPtxInjectionTest, DebugModeBackupCreation)
 	if (fs::exists(backup_file))
 		fs::remove(backup_file);
 
-	bool result = sf_nvcc::insert_bounds_check(temp_file, opts);
+	bool result = sf_nvcc::insert_bounds_check(temp_file, opts).success;
 	EXPECT_TRUE(result);
 	EXPECT_TRUE(fs::exists(backup_file));
 
@@ -442,7 +442,7 @@ TEST_F(SfNvccPtxInjectionTest, NoGlobalInstructionsHandling)
 	opts.enable_verbose = false;
 	opts.enable_debug = false;
 
-	bool result = sf_nvcc::insert_bounds_check(temp_file, opts);
+	bool result = sf_nvcc::insert_bounds_check(temp_file, opts).success;
 	EXPECT_TRUE(result);
 
 	std::ifstream file(temp_file);
@@ -466,7 +466,7 @@ TEST_F(SfNvccPtxInjectionTest, EmptyPtxFileHandling)
 	opts.enable_verbose = false;
 	opts.enable_debug = false;
 
-	bool result = sf_nvcc::insert_bounds_check(temp_file, opts);
+	bool result = sf_nvcc::insert_bounds_check(temp_file, opts).success;
 	EXPECT_TRUE(result);
 
 	std::ifstream file(temp_file);
@@ -490,7 +490,7 @@ TEST_F(SfNvccPtxInjectionTest, NonExistentFileHandling)
 	opts.enable_verbose = false;
 	opts.enable_debug = false;
 
-	bool result = sf_nvcc::insert_bounds_check(non_existent, opts);
+	bool result = sf_nvcc::insert_bounds_check(non_existent, opts).success;
 	EXPECT_FALSE(result);
 }
 
@@ -508,7 +508,7 @@ TEST_F(SfNvccPtxInjectionTest, IndentationPreservation)
 	opts.enable_verbose = false;
 	opts.enable_debug = false;
 
-	bool result = sf_nvcc::insert_bounds_check(temp_file, opts);
+	bool result = sf_nvcc::insert_bounds_check(temp_file, opts).success;
 	EXPECT_TRUE(result);
 
 	std::ifstream file(temp_file);
@@ -541,7 +541,7 @@ TEST_F(SfNvccPtxInjectionTest, VerboseModeOperation)
 	opts.enable_verbose = true;
 	opts.enable_debug = false;
 
-	bool result = sf_nvcc::insert_bounds_check(temp_file, opts);
+	bool result = sf_nvcc::insert_bounds_check(temp_file, opts).success;
 	EXPECT_TRUE(result);
 
 	std::ifstream file(temp_file);
@@ -569,7 +569,7 @@ TEST_F(SfNvccPtxInjectionTest, DebugModeComprehensive)
 	fs::path backup_file = temp_file;
 	backup_file += ".bak";
 
-	bool result = sf_nvcc::insert_bounds_check(temp_file, opts);
+	bool result = sf_nvcc::insert_bounds_check(temp_file, opts).success;
 	EXPECT_TRUE(result);
 	EXPECT_TRUE(fs::exists(backup_file));
 
@@ -606,7 +606,7 @@ TEST_F(SfNvccPtxInjectionTest, MixedDebugVerboseMode)
 	fs::path backup_file = temp_file;
 	backup_file += ".bak";
 
-	bool result = sf_nvcc::insert_bounds_check(temp_file, opts);
+	bool result = sf_nvcc::insert_bounds_check(temp_file, opts).success;
 	EXPECT_TRUE(result);
 	EXPECT_TRUE(fs::exists(backup_file));
 
@@ -639,7 +639,7 @@ TEST_F(SfNvccPtxInjectionTest, CompleteEndToEndTransformation)
 	opts.enable_verbose = false;
 	opts.enable_debug = false;
 
-	bool result = sf_nvcc::insert_bounds_check(temp_file, opts);
+	bool result = sf_nvcc::insert_bounds_check(temp_file, opts).success;
 	EXPECT_TRUE(result);
 
 	std::ifstream file(temp_file);

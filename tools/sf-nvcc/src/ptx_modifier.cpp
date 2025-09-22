@@ -100,11 +100,9 @@ static void logSuccess(const sf_nvcc::SafeCudaOptions &opts,
 
 /**
  * @brief Log error message with red color
- * @param opts SafeCUDA options (unused but maintains consistent interface)
  * @param msg Error message to display
  */
-static void logError(const sf_nvcc::SafeCudaOptions &opts,
-		     const std::string &msg)
+static void logError(const std::string &msg)
 {
 	std::cerr << ACOL(ACOL_R, ACOL_DF) << "Error: " << msg << ACOL_RESET()
 		  << std::endl;
@@ -143,7 +141,8 @@ static bool createBackupFile(const fs::path &ptx_path,
 static bool
 instrumentPTXFile(const fs::path &ptx_path,
 		  const std::vector<sf_nvcc::Instruction> &instructions,
-		  const sf_nvcc::SafeCudaOptions &opts)
+		  const sf_nvcc::SafeCudaOptions &opts,
+		  sf_nvcc::PtxModificationResult &result)
 {
 	std::ifstream input_file(ptx_path);
 	if (!input_file.is_open()) {
@@ -216,39 +215,43 @@ instrumentPTXFile(const fs::path &ptx_path,
 		output_file << current_line << "\n";
 	}
 
+	result.instructions_modified = instrumented_count;
 	output_file.close();
+
 	return true;
 }
 
-bool safecuda::tools::sf_nvcc::insert_bounds_check(
-	const fs::path &ptx_path, const sf_nvcc::SafeCudaOptions &sf_opts)
+sf_nvcc::PtxModificationResult
+sf_nvcc::insert_bounds_check(const fs::path &ptx_path,
+			     const sf_nvcc::SafeCudaOptions &sf_opts)
 {
+	PtxModificationResult result;
+	const auto start = std::chrono::steady_clock::now();
+
 	if (!fs::exists(ptx_path)) {
-		logError(sf_opts, "PTX file not found: " + ptx_path.string());
-		return false;
+		logError("PTX file not found: " + ptx_path.string());
+		return result;
 	}
 
 	if (!fs::is_regular_file(ptx_path)) {
-		logError(sf_opts,
-			 "Path is not a regular file: " + ptx_path.string());
-		return false;
+		logError("Path is not a regular file: " + ptx_path.string());
+		return result;
 	}
 
 	if (sf_opts.enable_debug && !createBackupFile(ptx_path, sf_opts)) {
-		logError(sf_opts, "Failed to create backup file");
-		return false;
+		logError("Failed to create backup file");
+		return result;
 	}
 
 	logInfo(sf_opts, "Starting PTX modification for: " +
 				 ptx_path.filename().string());
 
-	std::vector<sf_nvcc::Instruction> instructions;
+	std::vector<Instruction> instructions;
 	try {
-		instructions = sf_nvcc::find_all_ptx(ptx_path.string());
+		instructions = find_all_ptx(ptx_path.string());
 	} catch (const std::exception &e) {
-		logError(sf_opts,
-			 "Failed to parse PTX file: " + std::string(e.what()));
-		return false;
+		logError("Failed to parse PTX file: " + std::string(e.what()));
+		return result;
 	}
 
 	logInfo(sf_opts, "Found " + std::to_string(instructions.size()) +
@@ -257,16 +260,56 @@ bool safecuda::tools::sf_nvcc::insert_bounds_check(
 	if (instructions.empty()) {
 		logInfo(sf_opts,
 			"No global memory instructions found - no instrumentation needed");
-		return true;
+		result.success = true;
+		result.modification_time_ms =
+			std::chrono::duration_cast<std::chrono::milliseconds>(
+				std::chrono::steady_clock::now() - start)
+				.count();
+		return result;
 	}
 
-	if (!instrumentPTXFile(ptx_path, instructions, sf_opts)) {
-		logError(sf_opts, "Failed to instrument PTX file");
-		return false;
+	if (!instrumentPTXFile(ptx_path, instructions, sf_opts, result)) {
+		logError("Failed to instrument PTX file");
+		return result;
 	}
 
 	logSuccess(sf_opts, "Successfully instrumented " +
 				    std::to_string(instructions.size()) +
 				    " instructions");
-	return true;
+	result.success = true;
+	result.modification_time_ms =
+		std::chrono::duration_cast<std::chrono::milliseconds>(
+			std::chrono::steady_clock::now() - start)
+			.count();
+	result.modified_ptx_path = ptx_path;
+	return result;
+}
+
+sf_nvcc::PtxModificationResult
+sf_nvcc::modify_ptx(const fs::path &ptx_path, const SafeCudaOptions &sf_opts)
+{
+	PtxModificationResult result;
+	result.success = true;
+	result.modified_ptx_path = ptx_path;
+
+	if (sf_opts.enable_bounds_check) {
+		const PtxModificationResult current_res =
+			insert_bounds_check(result.modified_ptx_path, sf_opts);
+		result.success &= current_res.success;
+		result.instructions_modified +=
+			current_res.instructions_modified;
+		result.modification_time_ms += current_res.modification_time_ms;
+		result.modified_ptx_path = current_res.modified_ptx_path;
+	}
+	if (sf_opts.enable_verbose) {
+		std::cout << "Modification on file: \t\t"
+			  << result.modified_ptx_path << "\n\tStatus: "
+			  << (result.success ? "Success" : "Failed")
+			  << "\n\tInstructions Modified: "
+			  << result.instructions_modified
+			  << "\n\tModification Time(ms): "
+			  << result.modification_time_ms << "\n\n";
+	}
+
+	return result;
 }

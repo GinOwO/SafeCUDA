@@ -19,11 +19,12 @@
 #ifndef SAFECUDA_NVCC_WRAPPER_H
 #define SAFECUDA_NVCC_WRAPPER_H
 
+#include "sf_options.h"
+#include "ptx_modifier.h"
+
 #include <vector>
 #include <string>
 #include <filesystem>
-
-#include "sf_options.h"
 
 namespace safecuda::tools::sf_nvcc
 {
@@ -83,22 +84,6 @@ class TemporaryFileManager {
 };
 
 /**
- * @brief Result of PTX modification operation with detailed statistics
- *
- * Contains success status, modification counts, and diagnostic messages
- * for logging and error reporting purposes.
- */
-struct PtxModificationResult {
-	bool success;
-	size_t instructions_modified;
-	size_t bounds_checks_added;
-	std::vector<std::string> warnings;
-	std::vector<std::string> errors;
-	std::string modified_ptx_path;
-	double modification_time_ms = 0.0;
-};
-
-/**
  * @brief Generate PTX intermediate files using NVCC --keep
  *
  * Executes NVCC with --keep flag to preserve all intermediate compilation
@@ -116,23 +101,6 @@ struct PtxModificationResult {
 void generate_intermediate(const std::vector<std::string> &nvcc_args,
 			   const SafeCudaOptions &sf_opts,
 			   TemporaryFileManager &temp_mgr);
-
-/**
- * @brief Insert guards to a generated PTX file
- *
- * Perform parsing PTX assembly, identifying memory operations,
- * and injecting bounds checking macros into load/store instructions.
- *
- * @param ptx_path Path of ptx file to be modified
- * @param sf_opts SafeCUDA options for controlling PTX modification
- * @return PtxModificationResult done by the function for logging purposes
- *
- * @throws std::runtime_error if PTX parsing fails or modification generates invalid code
- * @throws std::filesystem::filesystem_error if modified files cannot be written
- * @note Original files are preserved with .bak suffix for debugging if sf_opts.enable_debug is true
- */
-PtxModificationResult modify_ptx(const std::filesystem::path &ptx_path,
-				 const SafeCudaOptions &sf_opts);
 
 /**
  * @brief Resume compilation with nvcc on intermediate files

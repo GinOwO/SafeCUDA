@@ -38,8 +38,7 @@ int main(const int argc, char *argv[])
 		for (const auto &path : temp_mgr.filter_ptx_paths()) {
 			if (safecuda_opts.enable_verbose)
 				std::cout << path << '\n';
-			// TODO: call modify here
-			// tools::sf_nvcc::modify_ptx(path, safecuda_opts);
+			tools::sf_nvcc::modify_ptx(path, safecuda_opts);
 		}
 		// tools::sf_nvcc::resume_nvcc(temp_mgr.get_intermediate_files(),
 		// 			    nvcc_args);

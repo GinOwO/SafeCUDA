@@ -100,14 +100,8 @@ void sf_nvcc::generate_intermediate(const std::vector<std::string> &nvcc_args,
 	}
 }
 
-// sf_nvcc::PtxModificationResult
-// sf_nvcc::modify_ptx(const fs::path &ptx_path, const SafeCudaOptions &sf_opts)
-// {
-// 	return {};
-// }
-//
-// bool sf_nvcc::resume_nvcc(const std::vector<std::string> &intermediate_paths,
-// 			  const std::vector<std::string> &nvcc_args)
+// bool resume_nvcc(const std::vector<std::filesystem::path> &intermediate_paths,
+// 		 const std::vector<std::string> &nvcc_args)
 // {
 // 	return true;
 // }
