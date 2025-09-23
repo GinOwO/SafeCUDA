@@ -30,7 +30,6 @@ int main(const int argc, char *argv[])
 		tools::sf_nvcc::SfNvccOptions sf_nvcc_options =
 			tools::sf_nvcc::parse_command_line(argc, argv);
 		auto [safecuda_opts, nvcc_args] = sf_nvcc_options;
-		;
 		tools::sf_nvcc::TemporaryFileManager temp_mgr(safecuda_opts);
 		if (safecuda_opts.enable_verbose)
 			tools::sf_nvcc::print_args(safecuda_opts, nvcc_args);
