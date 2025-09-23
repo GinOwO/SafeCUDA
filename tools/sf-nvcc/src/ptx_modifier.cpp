@@ -80,7 +80,7 @@ static void logInfo(const sf_nvcc::SafeCudaOptions &opts,
 		    const std::string &msg)
 {
 	if (opts.enable_verbose || opts.enable_debug) {
-		std::cerr << ACOL(ACOL_C, ACOL_DF) << msg << ACOL_RESET()
+		std::cout << ACOL(ACOL_C, ACOL_DF) << msg << ACOL_RESET()
 			  << std::endl;
 	}
 }
@@ -94,7 +94,7 @@ static void logSuccess(const sf_nvcc::SafeCudaOptions &opts,
 		       const std::string &msg)
 {
 	if (opts.enable_verbose || opts.enable_debug) {
-		std::cerr << ACOL(ACOL_G, ACOL_DF) << msg << ACOL_RESET()
+		std::cout << ACOL(ACOL_G, ACOL_DF) << msg << ACOL_RESET()
 			  << std::endl;
 	}
 }
@@ -105,7 +105,7 @@ static void logSuccess(const sf_nvcc::SafeCudaOptions &opts,
  */
 static void logError(const std::string &msg)
 {
-	std::cerr << ACOL(ACOL_R, ACOL_DF) << "Error: " << msg << ACOL_RESET()
+	std::cout << ACOL(ACOL_R, ACOL_DF) << "Error: " << msg << ACOL_RESET()
 		  << std::endl;
 }
 
@@ -292,7 +292,7 @@ sf_nvcc::insert_bounds_check(const fs::path &ptx_path,
 				    " instructions");
 	result.success = true;
 	result.modification_time_ms =
-		std::chrono::duration_cast<std::chrono::milliseconds>(
+		std::chrono::duration_cast<std::chrono::microseconds>(
 			std::chrono::steady_clock::now() - start)
 			.count();
 	result.modified_ptx_path = ptx_path.string();
@@ -305,7 +305,9 @@ sf_nvcc::modify_ptx(const fs::path &ptx_path, const SafeCudaOptions &sf_opts)
 	PtxModificationResult result;
 	result.success = true;
 	result.modified_ptx_path = ptx_path.string();
-
+	std::cout << std::endl;
+	if (sf_opts.enable_verbose)
+		std::cout << ptx_path << '\n';
 	if (sf_opts.enable_bounds_check) {
 		const PtxModificationResult current_res =
 			insert_bounds_check(result.modified_ptx_path, sf_opts);
@@ -321,10 +323,11 @@ sf_nvcc::modify_ptx(const fs::path &ptx_path, const SafeCudaOptions &sf_opts)
 			  << (result.success ? "Success" : "Failed")
 			  << "\n\tInstructions Modified: "
 			  << result.instructions_modified
-			  << "\n\tModification Time(ms): "
-			  << result.modification_time_ms << "\n";
+			  << "\n\tModification Time(ms): " << std::fixed
+			  << result.modification_time_ms / 1000.0f
+			  << std::defaultfloat << "\n"
+			  << std::endl;
 	}
-	std::cout << std::endl;
 
 	return result;
 }

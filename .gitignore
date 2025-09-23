@@ -75,3 +75,4 @@ out/
 .vscode/
 
 example
+example_nvcc

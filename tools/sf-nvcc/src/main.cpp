@@ -39,8 +39,6 @@ int main(const int argc, char *argv[])
 
 		std::vector<std::filesystem::path> final_ptx_paths;
 		for (const auto &path : temp_mgr.filter_ptx_paths()) {
-			if (safecuda_opts.enable_verbose)
-				std::cout << path << '\n';
 			final_ptx_paths.emplace_back(
 				tools::sf_nvcc::modify_ptx(path, safecuda_opts)
 					.modified_ptx_path);

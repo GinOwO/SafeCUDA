@@ -4,6 +4,8 @@
 
 extern "C" void launchScaleArray(float *d_data, int n);
 extern "C" void launchAddOne(float *d_data, int n);
+extern "C" void monteCarloPi(int *d_count, int samples, int blocks, int threads,
+			     unsigned long seed);
 
 int main()
 {
@@ -27,5 +29,19 @@ int main()
 
 	for (auto val : h_data)
 		std::cout << val << " ";
-	std::cout << "\n";
+
+	std::cout << "\n\nMonteCarloPi\n";
+
+	int *d_count;
+	cudaMalloc(&d_count, sizeof(int));
+	cudaMemset(d_count, 0, sizeof(int));
+
+	monteCarloPi(d_count, 1000000, 256, 256, time(nullptr));
+
+	int h_count;
+	cudaMemcpy(&h_count, d_count, sizeof(int), cudaMemcpyDeviceToHost);
+	cudaFree(d_count);
+
+	double pi = 4.0 * h_count / 1000000.0f;
+	std::cout << "Estimated π = " << pi << std::endl;
 }
