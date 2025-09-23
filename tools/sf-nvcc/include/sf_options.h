@@ -8,10 +8,12 @@
  *
  * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
  * @date 2025-08-13
- * @version 0.0.2
+ * @version 1.0.0
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  *
  * Change Log:
+ * - 2025-09-23: Rewrote stuff around NvccOptions
+ * - 2025-09-22: Removed some switches, moved stuff around for more modularity
  * - 2025-08-13: Added output file switch
  * - 2025-08-13: Initial File
  */
@@ -55,7 +57,17 @@ struct SafeCudaOptions {
 	bool log_violations = false; ///< Log memory violations.
 	std::string log_file{"stderr"}; ///< Path for violation logs.
 	std::string keep_dir; ///< Directory to store intermediate files.
-	std::string output_path; ///< Directory to store final output
+};
+
+/**
+ * @brief Configuration options for NVCC
+ *
+ * Holds all NVCC-specific options parsed from command line arguments.
+ */
+struct NvccOptions {
+	std::vector<std::string> input_files; ///< NVCC input files
+	std::vector<std::string> nvcc_args; ///< Remaining NVCC arguments.
+	std::string output_path; ///< NVCC output file path
 };
 
 /**
@@ -65,7 +77,7 @@ struct SafeCudaOptions {
  */
 struct SfNvccOptions {
 	SafeCudaOptions safecuda_opts; ///< SafeCUDA-specific options.
-	std::vector<std::string> nvcc_args; ///< Remaining NVCC arguments.
+	NvccOptions nvcc_opts; ///< NVCC arguments
 };
 
 /**
@@ -97,7 +109,7 @@ void print_version();
  * @brief Print verbose arguments
  */
 void print_args(const SafeCudaOptions &safecuda_opts,
-		const std::vector<std::string> &nvcc_args);
+		const NvccOptions &nvcc_opts);
 
 } // namespace safecuda::tools
 

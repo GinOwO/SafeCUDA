@@ -7,10 +7,12 @@
  *
  * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
  * @date 2025-08-12
- * @version 0.0.1
+ * @version 1.0.0
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  *
  * Change Log:
+ * - 2025-09-23: Implemented resume_nvcc and rewrote stuff around NvccOptions
+ * - 2025-09-22: Moved modify ptx to ptx_modifier and implemented resume_nvcc
  * - 2025-08-13: Created NVCC wrapper methods,
  *		 added PtxModificationResult and TemporaryFileManager
  * - 2025-08-12: Initial File
@@ -25,6 +27,7 @@
 #include <vector>
 #include <string>
 #include <filesystem>
+#include <unordered_map>
 
 namespace safecuda::tools::sf_nvcc
 {
@@ -98,7 +101,7 @@ class TemporaryFileManager {
  * @note Temporary files are created according to -sf-keep-dir (and if not given
  * then system temp directory)
  */
-void generate_intermediate(const std::vector<std::string> &nvcc_args,
+void generate_intermediate(const NvccOptions &nvcc_opts,
 			   const SafeCudaOptions &sf_opts,
 			   TemporaryFileManager &temp_mgr);
 
@@ -109,14 +112,18 @@ void generate_intermediate(const std::vector<std::string> &nvcc_args,
  * intermediate files, producing the final executable or object files with
  * SafeCUDA bounds checking integrated.
  *
- * @param intermediate_paths List of paths of all intermediate nvcc files
- * @param nvcc_args NVCC arguments including source files and compilation flags
+ * @param ptx_paths List of paths of all ptx files to resume from
+ * @param sf_nvcc_opts NVCC arguments including source files and compilation flags
  * @return true if nvcc completed successfully, false otherwise
  * @throws std::runtime_error if nvcc fails to compile
  * @throws std::filesystem::filesystem_error if unable find files in paths
+ *
+ * @note nvlink warnings like `SM Arch ('sm_52') not found in` are expected and
+ *	a normal part of multi-arch compilation in nvcc with ptx
  */
-bool resume_nvcc(const std::vector<std::filesystem::path> &intermediate_paths,
-		 const std::vector<std::string> &nvcc_args);
+bool resume_nvcc(const std::vector<std::filesystem::path> &ptx_paths,
+		 const SfNvccOptions &sf_nvcc_opts,
+		 TemporaryFileManager &temp_mgr);
 
 } // namespace safecuda::tools::sf_nvcc
 

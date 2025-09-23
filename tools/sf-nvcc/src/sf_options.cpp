@@ -8,10 +8,11 @@
  *
  * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
  * @date 2025-08-13
- * @version 0.0.2
+ * @version 1.0.0
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  *
  * Change Log:
+ * - 2025-09-22: Removed some switches, moved stuff around for more modularity
  * - 2025-08-13: Enabling debug also now enables verbose, added output switch
  * - 2025-08-13: Initial File
  */
@@ -32,7 +33,7 @@ namespace sf_nvcc = safecuda::tools::sf_nvcc;
 extern unsigned char help_txt_gz[];
 extern unsigned int help_txt_gz_len;
 
-static inline std::string missing_input(const std::string &arg)
+static std::string missing_input(const std::string &arg)
 {
 	return ACOL(ACOL_K, ACOL_DF) ACOL(
 		       ACOL_R,
@@ -40,8 +41,7 @@ static inline std::string missing_input(const std::string &arg)
 	       arg + "\"\n";
 }
 
-static inline std::string bad_value(const std::string &arg,
-				    const std::string &val)
+static std::string bad_value(const std::string &arg, const std::string &val)
 {
 	return ACOL(ACOL_K, ACOL_DF) ACOL(
 		       ACOL_R,
@@ -51,8 +51,7 @@ static inline std::string bad_value(const std::string &arg,
 
 /* Sample nvcc command
 nvcc \
-	-g -G -O0 -Xcompiler -fPIC \
-	-Xptxas -O0 \
+	-O3 -DNDEBUG -Xcompiler -fPIC \
 	-Wno-deprecated-gpu-targets \
 	--extended-lambda \
 	--expt-relaxed-constexpr \
@@ -78,7 +77,9 @@ sf_nvcc::SfNvccOptions sf_nvcc::parse_command_line(const int argc, char *argv[])
 			if (arg == "-sf-help") {
 				print_help();
 				std::exit(EXIT_SUCCESS);
-			} else if (arg == "-sf-version") {
+			}
+
+			if (arg == "-sf-version") {
 				print_version();
 			} else if (++arg_pos >= argc) {
 				throw std::invalid_argument(missing_input(arg));
@@ -145,13 +146,19 @@ sf_nvcc::SfNvccOptions sf_nvcc::parse_command_line(const int argc, char *argv[])
 			if (arg == "-o") {
 				if (++arg_pos >= argc) {
 					throw std::runtime_error(
-						missing_input("-o"));
+						missing_input(arg));
 				}
-				options.safecuda_opts.output_path =
+				options.nvcc_opts.output_path =
 					std::string(argv[arg_pos]);
-			} else if (!(arg.starts_with("--keep") || arg == "-c" ||
-				     arg == "--ptx"))
-				options.nvcc_args.emplace_back(arg);
+			} else if (arg.ends_with(".cu")) {
+				options.nvcc_opts.input_files.emplace_back(
+					argv[arg_pos]);
+			} else if (!(arg.starts_with("--keep") ||
+				     arg.starts_with("-rdc") || arg == "-c" ||
+				     arg == "-dc" || arg == "-dlink" ||
+				     arg == "--ptx")) {
+				options.nvcc_opts.nvcc_args.emplace_back(arg);
+			}
 		}
 		arg_pos++;
 	}
@@ -209,12 +216,12 @@ inline void sf_nvcc::print_version()
 		  << PROJECT_VERSION << ACOL_RESET() "\n";
 }
 
-void sf_nvcc::print_args(const struct SafeCudaOptions &safecuda_opts,
-			 const std::vector<std::string> &nvcc_args)
+void sf_nvcc::print_args(const SafeCudaOptions &safecuda_opts,
+			 const NvccOptions &nvcc_opts)
 {
 	const auto &[enable_bounds_check, enable_debug, enable_verbose,
-		     fail_fast, log_violations, log_file, keep_dir,
-		     output_path] = safecuda_opts;
+		     fail_fast, log_violations, log_file,
+		     keep_dir] = safecuda_opts;
 	std::cout << ACOL(ACOL_Y, ACOL_BB) << ACOL(ACOL_K, ACOL_DF)
 		  << "sf-nvcc options:" ACOL_RESET() "\n\t"
 		  << "enable_bounds_check: " << std::boolalpha
@@ -226,9 +233,16 @@ void sf_nvcc::print_args(const struct SafeCudaOptions &safecuda_opts,
 		  << "log_file: " << (log_file.empty() ? "<none>" : log_file)
 		  << "\n\t"
 		  << "keep_dir: " << keep_dir << "\n\t"
-		  << "output_path: " << output_path << "\n\t"
+		  << "output_path: " << nvcc_opts.output_path << "\n\t"
 		  << "nvcc_args: \n\t\t";
-	for (const auto &arg : nvcc_args)
+
+	std::cout << "Input args:\n\t\t";
+	for (const auto &arg : nvcc_opts.input_files)
 		std::cout << arg << "\n\t\t";
+
+	std::cout << "\n\t\tOther args:\n\t\t";
+	for (const auto &arg : nvcc_opts.nvcc_args)
+		std::cout << arg << "\n\t\t";
+
 	std::cout << "\n";
 }

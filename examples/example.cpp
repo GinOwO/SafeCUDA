@@ -19,6 +19,7 @@ int main()
 
 	launchScaleArray(d_data, n);
 	launchAddOne(d_data, n);
+	launchScaleArray(d_data, n);
 
 	cudaMemcpy(h_data.data(), d_data, n * sizeof(float),
 		   cudaMemcpyDeviceToHost);

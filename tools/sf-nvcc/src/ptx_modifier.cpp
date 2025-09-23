@@ -7,10 +7,11 @@
  *
  * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
  * @date 2025-08-12
- * @version 0.0.2
+ * @version 1.0.0
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  *
  * Change Log:
+ * - 2025-09-23: Now inserts bounds_check directly into every ptx file
  * - 2025-09-22: Initial Implementation
  * - 2025-08-12: Initial File
  */
@@ -167,6 +168,18 @@ instrumentPTXFile(const fs::path &ptx_path,
 	for (size_t line_num = 1; line_num <= file_lines.size(); ++line_num) {
 		const std::string &current_line = file_lines[line_num - 1];
 
+		if (current_line.starts_with(".address_size")) {
+			output_file << current_line << "\n\n"
+				    << R"ptx(.func bounds_check(
+	.param .b64 bounds_check_param_0
+)
+{
+	ret;
+}
+)ptx" << "\n\n";
+			continue;
+		}
+
 		bool needs_instrumentation = false;
 		std::string bounds_check_call;
 
@@ -261,6 +274,7 @@ sf_nvcc::insert_bounds_check(const fs::path &ptx_path,
 		logInfo(sf_opts,
 			"No global memory instructions found - no instrumentation needed");
 		result.success = true;
+		result.modified_ptx_path = ptx_path.string();
 		result.modification_time_ms =
 			std::chrono::duration_cast<std::chrono::milliseconds>(
 				std::chrono::steady_clock::now() - start)
@@ -281,7 +295,7 @@ sf_nvcc::insert_bounds_check(const fs::path &ptx_path,
 		std::chrono::duration_cast<std::chrono::milliseconds>(
 			std::chrono::steady_clock::now() - start)
 			.count();
-	result.modified_ptx_path = ptx_path;
+	result.modified_ptx_path = ptx_path.string();
 	return result;
 }
 
@@ -290,7 +304,7 @@ sf_nvcc::modify_ptx(const fs::path &ptx_path, const SafeCudaOptions &sf_opts)
 {
 	PtxModificationResult result;
 	result.success = true;
-	result.modified_ptx_path = ptx_path;
+	result.modified_ptx_path = ptx_path.string();
 
 	if (sf_opts.enable_bounds_check) {
 		const PtxModificationResult current_res =
@@ -308,8 +322,9 @@ sf_nvcc::modify_ptx(const fs::path &ptx_path, const SafeCudaOptions &sf_opts)
 			  << "\n\tInstructions Modified: "
 			  << result.instructions_modified
 			  << "\n\tModification Time(ms): "
-			  << result.modification_time_ms << "\n\n";
+			  << result.modification_time_ms << "\n";
 	}
+	std::cout << std::endl;
 
 	return result;
 }

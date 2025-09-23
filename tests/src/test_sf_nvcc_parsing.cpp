@@ -8,10 +8,11 @@
  *
  * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
  * @date 2025-08-13
- * @version 0.0.2
+ * @version 1.0.0
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  *
  * Change Log:
+ * - 2025-09-23: Minor renaming as part of a struct change
  * - 2025-09-22: Renamed File to be style compliant
  * - 2025-08-13: Initial implementation with Google Test
  */
@@ -124,14 +125,14 @@ TEST_F(SfNvccParsingTest, NvccArgsCollection)
 
 	for (const auto &arg : args) {
 		if (arg.rfind("-sf-", 0) != 0) {
-			options.nvcc_args.emplace_back(arg);
+			options.nvcc_opts.nvcc_args.emplace_back(arg);
 		}
 	}
 
-	EXPECT_EQ(options.nvcc_args.size(), args.size());
-	EXPECT_EQ(options.nvcc_args[0], "-O3");
-	EXPECT_EQ(options.nvcc_args[1], "-arch=sm_75");
-	EXPECT_EQ(options.nvcc_args[2], "kernel.cu");
+	EXPECT_EQ(options.nvcc_opts.nvcc_args.size(), args.size());
+	EXPECT_EQ(options.nvcc_opts.nvcc_args[0], "-O3");
+	EXPECT_EQ(options.nvcc_opts.nvcc_args[1], "-arch=sm_75");
+	EXPECT_EQ(options.nvcc_opts.nvcc_args[2], "kernel.cu");
 }
 
 /**
@@ -243,7 +244,7 @@ TEST_F(SfNvccParsingTest, MultipleSwitchesParsing)
 			options.safecuda_opts.log_violations = true;
 			options.safecuda_opts.log_file = args[++i];
 		} else if (arg.rfind("-sf-", 0) != 0) {
-			options.nvcc_args.push_back(arg);
+			options.nvcc_opts.nvcc_args.push_back(arg);
 		}
 	}
 
@@ -253,7 +254,7 @@ TEST_F(SfNvccParsingTest, MultipleSwitchesParsing)
 	EXPECT_TRUE(options.safecuda_opts.log_violations);
 	EXPECT_EQ(options.safecuda_opts.log_file, "/var/log/sf.log");
 
-	ASSERT_EQ(options.nvcc_args.size(), 2);
-	EXPECT_EQ(options.nvcc_args[0], "-O2");
-	EXPECT_EQ(options.nvcc_args[1], "kernel.cu");
+	ASSERT_EQ(options.nvcc_opts.nvcc_args.size(), 2);
+	EXPECT_EQ(options.nvcc_opts.nvcc_args[0], "-O2");
+	EXPECT_EQ(options.nvcc_opts.nvcc_args[1], "kernel.cu");
 }

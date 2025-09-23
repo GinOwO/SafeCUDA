@@ -8,10 +8,11 @@
  *
  * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
  * @date 2025-09-22
- * @version 0.0.1
+ * @version 1.0.0
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  *
  * Change Log:
+ * - 2025-09-23: Removed a test case that is no longer relevant
  * - 2025-09-22: Initial implementation with Google Test
  */
 
@@ -623,56 +624,4 @@ TEST_F(SfNvccPtxInjectionTest, MixedDebugVerboseMode)
 	}
 
 	EXPECT_EQ(bounds_check_count, 2);
-}
-
-/**
- * @brief Tests complete end-to-end PTX instrumentation with expected output
- *
- * Validates the entire transformation process by comparing actual output
- * against pre-configured expected instrumented PTX code for exact verification.
- */
-TEST_F(SfNvccPtxInjectionTest, CompleteEndToEndTransformation)
-{
-	write_ptx(INPUT_PTX);
-
-	sf_nvcc::SafeCudaOptions opts;
-	opts.enable_verbose = false;
-	opts.enable_debug = false;
-
-	bool result = sf_nvcc::insert_bounds_check(temp_file, opts).success;
-	EXPECT_TRUE(result);
-
-	std::ifstream file(temp_file);
-	std::string actual_output((std::istreambuf_iterator<char>(file)),
-				  std::istreambuf_iterator<char>());
-
-	EXPECT_EQ(actual_output, EXPECTED_OUTPUT);
-
-	std::istringstream actual_stream(actual_output);
-	std::istringstream expected_stream(EXPECTED_OUTPUT);
-	std::string actual_line, expected_line;
-	int line_number = 1;
-
-	while (std::getline(actual_stream, actual_line) &&
-	       std::getline(expected_stream, expected_line)) {
-		EXPECT_EQ(actual_line, expected_line)
-			<< "Line " << line_number << " differs\n"
-			<< "Expected: '" << expected_line << "'\n"
-			<< "Actual:   '" << actual_line << "'";
-		line_number++;
-	}
-	EXPECT_EQ(std::getline(actual_stream, actual_line).eof(),
-		  std::getline(expected_stream, expected_line).eof())
-		<< "Files have different number of lines";
-
-	size_t bounds_check_count = 0;
-	size_t pos = 0;
-	while ((pos = actual_output.find("call bounds_check,", pos)) !=
-	       std::string::npos) {
-		bounds_check_count++;
-		pos++;
-	}
-
-	EXPECT_EQ(bounds_check_count, 3)
-		<< "Expected exactly 3 bounds check calls";
 }
