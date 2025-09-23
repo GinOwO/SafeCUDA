@@ -1,27 +1,34 @@
 # SafeCUDA Style Guide
 
-This document defines the complete coding style and conventions for the project. The main language used is C++ with CUDA extensions, and the style is inspired by the Linux kernel coding style. 
+This document defines the complete coding style and conventions for the project.
+The main language used is C++ with CUDA extensions, and the style is inspired by
+the Linux kernel coding style.
 
 ## Table of Contents
-0. [TLDR](#tldr)
-1. [Code Formatting](#code-formatting)
-2. [Naming Conventions](#naming-conventions)
-3. [Versioning](#versioning)
-4. [File Organization](#file-organization)
-5. [Documentation Standards](#documentation-standards)
-6. [C++ Specific Guidelines](#c-specific-guidelines)
-7. [CUDA Specific Guidelines](#cuda-specific-guidelines)
-8. [Error Handling](#error-handling)
-9. [Build Integration Style](#build-integration-style)
-10. [Common Design Patterns](#common-design-patterns)
 
-## TLDR: 
-- Always run `./scripts/format.sh` before committing code which applies formatting using `clang-format`.
+1. [TLDR](#tldr)
+2. [Code Formatting](#code-formatting)
+3. [Naming Conventions](#naming-conventions)
+4. [Versioning](#versioning)
+5. [File Organization](#file-organization)
+6. [Documentation Standards](#documentation-standards)
+7. [C++ Specific Guidelines](#c-specific-guidelines)
+8. [CUDA Specific Guidelines](#cuda-specific-guidelines)
+9. [Error Handling](#error-handling)
+10. [Build Integration Style](#build-integration-style)
+11. [Common Design Patterns](#common-design-patterns)
+
+## TLDR:
+
+- Always run `./scripts/format.sh` before committing code which applies
+  formatting using `clang-format`.
 - Follow LK style for C++ code which is basically:
     - Follow the K&R style.
     - Function braces should be on a new line.
-    - Use 8-space tabs for indentation and a maximum line length of 80 characters.
-    - Use snake_case for variables and functions, PascalCase for classes and types.
+    - Use 8-space tabs for indentation and a maximum line length of 80
+      characters.
+    - Use snake_case for variables and functions, PascalCase for classes and
+      types.
     - Use UPPER_CASE for constants and macros.
 - Use stdint.h types for fixed-width integers (e.g., `int32_t`, `uint64_t`).
 - Use `nullptr` for null pointers.
@@ -39,7 +46,6 @@ This document defines the complete coding style and conventions for the project.
 - **Line length**: Maximum 80 characters (`ColumnLimit: 80`)
 - **Encoding**: UTF-8 with Unix line endings (LF)
 - **Trailing whitespace**: Not allowed
-
 
 ### Braces and Brackets
 
@@ -72,7 +78,6 @@ namespace safecuda
 }
 ```
 
-
 ### Spacing and Alignment
 
 ```cpp
@@ -96,10 +101,10 @@ variable = value;
 ptr += offset;
 ```
 
-
 ### Line Breaking
 
 Let clang-format handle this automatically, but here are some guidelines:
+
 ```cpp
 // Long function declarations
 bool very_long_function_name(const std::vector<float>& input_data,
@@ -119,7 +124,6 @@ auto result = object().short_m()
                       .short_m();
 ```
 
-
 ## Naming Conventions
 
 ### Variables and Functions
@@ -135,7 +139,6 @@ void initialize_cuda();
 void check_bounds(void *ptr, size_t size);
 bool validate_memory_access(void *ptr);
 ```
-
 
 ### Classes, Structs, and Types
 
@@ -160,7 +163,6 @@ using DevicePtr = void*;
 using MetadataTable = std::unordered_map<void*, MetadataEntry>;
 ```
 
-
 ### Constants and Macros
 
 ```cpp
@@ -178,7 +180,6 @@ const float EPSILON = 1e-6f;
         #define LOG_LEVEL 1
 #endif
 ```
-
 
 ### CUDA-Specific Naming
 
@@ -199,7 +200,6 @@ dim3 grid_size;           // kernel launch parameters
 dim3 block_size;
 ```
 
-
 ### File Naming
 
 ```cpp
@@ -215,7 +215,6 @@ interception.cpp          // Memory allocation interception
 test_bounds_checking.cpp  // Test files
 ```
 
-
 ## Versioning
 
 SafeCUDA follows [Semantic Versioning 2.0.0](https://semver.org/).
@@ -227,6 +226,7 @@ MAJOR.MINOR.PATCH[-PRERELEASE][+BUILD]
 ```
 
 **Examples:**
+
 - `1.0.0` - Initial stable release
 - `1.2.3` - Standard release
 - `2.0.0-alpha.1` - Pre-release version
@@ -235,6 +235,7 @@ MAJOR.MINOR.PATCH[-PRERELEASE][+BUILD]
 ### Version Components
 
 #### MAJOR Version
+
 Increment when making **incompatible API changes**:
 
 ```cpp
@@ -246,6 +247,7 @@ bool initialize_safecuda(const SafeCudaConfig& config);
 ```
 
 **Examples of MAJOR changes:**
+
 - Removing public functions or classes
 - Changing function signatures
 - Modifying public struct/class layouts
@@ -253,6 +255,7 @@ bool initialize_safecuda(const SafeCudaConfig& config);
 - Dropping support for CUDA versions
 
 #### MINOR Version
+
 Increment when adding **backward-compatible functionality**:
 
 ```cpp
@@ -275,6 +278,7 @@ public:
 ```
 
 **Examples of MINOR changes:**
+
 - Adding new public functions
 - Adding new classes or namespaces
 - Adding optional parameters with defaults
@@ -282,6 +286,7 @@ public:
 - Performance improvements without API changes
 
 #### PATCH Version
+
 Increment for **backward-compatible bug fixes**:
 
 ```cpp
@@ -300,6 +305,7 @@ __device__ bool validate_access(void *ptr, size_t size) {
 ```
 
 **Examples of PATCH changes:**
+
 - Bug fixes that don't change API
 - Security patches
 - Documentation corrections
@@ -317,6 +323,7 @@ Use pre-release identifiers for unstable versions:
 ```
 
 **Pre-release naming:**
+
 - `alpha` - Early development, unstable API
 - `beta` - Feature complete, API stable, testing phase
 - `rc` (release candidate) - Final testing before release
@@ -348,72 +355,19 @@ project(SafeCUDA
     LANGUAGES CXX CUDA
 )
 
-# Generate version header
-configure_file(
-    ${CMAKE_SOURCE_DIR}/include/safecuda_version.h.in
-    ${CMAKE_BINARY_DIR}/include/safecuda_version.h
+# Generate version define
+target_compile_definitions(safecuda PRIVATE
+        PROJECT_VERSION_MAJOR="${PROJECT_VERSION_MAJOR}"
+        PROJECT_VERSION_MINOR="${PROJECT_VERSION_MINOR}"
+        PROJECT_VERSION_PATCH="${PROJECT_VERSION_PATCH}"
+        PROJECT_VERSION="${PROJECT_VERSION}"
 )
-```
-
-#### Version Header Template (safecuda_version.h.in)
-```cpp
-/**
- * @file safecuda_version.h
- * @brief SafeCUDA version information
- * 
- * Auto-generated version header containing compile-time version constants.
- * 
- * @author SafeCUDA Build System
- * @date 2025-07-06
- * @version @PROJECT_VERSION@
- * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
- */
-
-#ifndef SAFECUDA_VERSION_H
-#define SAFECUDA_VERSION_H
-
-#define SAFECUDA_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
-#define SAFECUDA_VERSION_MINOR @PROJECT_VERSION_MINOR@
-#define SAFECUDA_VERSION_PATCH @PROJECT_VERSION_PATCH@
-#define SAFECUDA_VERSION_STRING "@PROJECT_VERSION@"
-
-// Compile-time version checking
-#define SAFECUDA_VERSION_AT_LEAST(major, minor, patch) \
-        ((SAFECUDA_VERSION_MAJOR > (major)) || \
-         (SAFECUDA_VERSION_MAJOR == (major) && SAFECUDA_VERSION_MINOR > (minor)) || \
-         (SAFECUDA_VERSION_MAJOR == (major) && SAFECUDA_VERSION_MINOR == (minor) && \
-          SAFECUDA_VERSION_PATCH >= (patch)))
-
-#endif // SAFECUDA_VERSION_H
-```
-
-#### Runtime Version API
-```cpp
-namespace safecuda {
-        /**
-         * @brief Get SafeCUDA version string
-         * @return Version string in MAJOR.MINOR.PATCH format
-         */
-        const char* get_version() {
-                return SAFECUDA_VERSION_STRING;
-        }
-        
-        /**
-         * @brief Check if current version meets minimum requirement
-         * @param major Required major version
-         * @param minor Required minor version  
-         * @param patch Required patch version
-         * @return true if current version >= required version
-         */
-        bool version_at_least(int major, int minor, int patch) {
-                return SAFECUDA_VERSION_AT_LEAST(major, minor, patch);
-        }
-}
 ```
 
 ### Release Process
 
 #### Git Tagging
+
 ```bash
 # Create annotated tag for release
 git tag -a v1.2.3 -m "SafeCUDA v1.2.3: Bug fixes and performance improvements"
@@ -423,13 +377,16 @@ git push origin v1.2.3
 ```
 
 #### Documentation Updates
+
 Update version in all documentation files:
+
 - README.md
 - API documentation
 - Installation guides
 - Changelog/Release notes
 
 #### Version Validation
+
 ```cpp
 // Compile-time assertions for version consistency
 static_assert(SAFECUDA_VERSION_MAJOR >= 1, "Major version must be >= 1");
@@ -439,6 +396,7 @@ static_assert(SAFECUDA_VERSION_STRING[0] != '\0', "Version string cannot be empt
 ### Examples
 
 #### Breaking Change (MAJOR)
+
 ```cpp
 // v1.x.x
 bool initialize_safecuda(int device_id = 0);
@@ -454,6 +412,7 @@ bool initialize_safecuda(const SafeCudaConfig& config);
 ```
 
 #### New Feature (MINOR)
+
 ```cpp
 // v1.0.0
 namespace safecuda {
@@ -476,6 +435,7 @@ namespace safecuda {
 ```
 
 #### Bug Fix (PATCH)
+
 ```cpp
 // v1.1.0 - Has bug
 __device__ bool check_bounds(void* ptr, size_t size) {
@@ -487,7 +447,6 @@ __device__ bool check_bounds(void* ptr, size_t size) {
         return ptr != nullptr && size > 0;
 }
 ```
-
 
 ## File Organization
 
@@ -555,7 +514,6 @@ namespace safecuda
 #endif // SAFECUDA_H
 ```
 
-
 ### Source File Structure
 
 ```cpp
@@ -619,12 +577,12 @@ namespace
 } // anonymous namespace
 ```
 
-
 ## Documentation Standards
 
 ### Doxygen Style Requirements
 
-SafeCUDA uses **Doxygen-style comments** exclusively. All public APIs, classes, and non-trivial functions must be documented.
+SafeCUDA uses **Doxygen-style comments** exclusively. All public APIs, classes,
+and non-trivial functions must be documented.
 
 ### File-Level Documentation
 
@@ -648,7 +606,6 @@ SafeCUDA uses **Doxygen-style comments** exclusively. All public APIs, classes, 
  */
 ```
 
-
 ### Class Documentation
 
 ```cpp
@@ -667,7 +624,6 @@ class ClassName {
         // ...
 };
 ```
-
 
 ### Function Documentation
 
@@ -695,7 +651,6 @@ class ClassName {
 ReturnType function_name(ParamType param_name, OutputType *output_param);
 ```
 
-
 ### Documentation Examples
 
 #### Poor Documentation (Describes WHAT)
@@ -708,7 +663,6 @@ ReturnType function_name(ParamType param_name, OutputType *output_param);
  */
 bool is_valid_pointer(void *ptr);
 ```
-
 
 #### Good Documentation (Describes WHY/HOW)
 
@@ -732,7 +686,6 @@ bool is_valid_pointer(void *ptr);
  */
 bool is_valid_pointer(void *ptr);
 ```
-
 
 ## C++ Specific Guidelines
 
@@ -781,7 +734,6 @@ class SafeCUDA {
 };
 ```
 
-
 ### Memory Management
 
 ```cpp
@@ -825,7 +777,6 @@ class CudaMemory {
 };
 ```
 
-
 ### Function Parameters
 
 ```cpp
@@ -844,7 +795,6 @@ void compute_result(const float *input, float *output, size_t count);
 void configure_kernel(int block_size = 256,
                       std::optional<cudaStream_t> stream = std::nullopt);
 ```
-
 
 ### Exception Safety
 
@@ -889,7 +839,6 @@ void SafeCUDA::initialize()
 }
 ```
 
-
 ## CUDA Specific Guidelines
 
 ### Kernel Launch Patterns
@@ -932,7 +881,6 @@ void launch_bounds_check(float *data, int size, cudaStream_t stream)
         }
 }
 ```
-
 
 ### Device Code Style
 
@@ -1019,7 +967,6 @@ __device__ bool validate_access(void *ptr, const MetadataEntry *cache, int cache
 }
 ```
 
-
 ### CUDA Error Handling
 
 ```cpp
@@ -1054,7 +1001,6 @@ void allocate_device_memory(void **ptr, size_t bytes)
         CUDA_CHECK(cudaMemset(*ptr, 0, bytes));
 }
 ```
-
 
 ## Error Handling
 
@@ -1106,7 +1052,6 @@ const char* get_error_string(SafeCudaError error)
 }
 ```
 
-
 ### Exception Handling Strategy
 
 ```cpp
@@ -1136,7 +1081,6 @@ class SafeCudaException : public std::runtime_error {
 };
 ```
 
-
 ## Build Integration Style
 
 ### CMake Style
@@ -1146,7 +1090,7 @@ class SafeCudaException : public std::runtime_error {
 cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 
 # Project configuration
-project(SafeCUDA 
+project(SafeCUDA
         VERSION 1.0.0
         LANGUAGES CXX CUDA
         DESCRIPTION "Software-only memory safety for CUDA applications"
@@ -1169,22 +1113,21 @@ add_library(safecuda SHARED
         src/safecuda.cpp
         src/interception.cpp
         src/metadata_manager.cpp
-        
+
         # Device-side implementation
         src/safecuda.cu
         src/bounds_checking.cu
 )
 
 # Clear dependency specification
-target_link_libraries(safecuda 
+target_link_libraries(safecuda
         PUBLIC
-                CUDA::cudart
+        CUDA::cudart
         PRIVATE
-                CUDA::cuda_driver
-                ${CMAKE_DL_LIBS}
+        CUDA::cuda_driver
+        ${CMAKE_DL_LIBS}
 )
 ```
-
 
 ### Shell Script Style
 
@@ -1231,7 +1174,6 @@ ninja
 echo "Build complete! Binaries are in $BUILD_DIR/"
 echo "Run tests with ctest in the build directory."
 ```
-
 
 ## Common Design Patterns
 
@@ -1308,7 +1250,6 @@ class Component {
         const std::string& last_error() const noexcept { return last_error_; }
 };
 ```
-
 
 ### Resource Management Pattern
 

@@ -16,7 +16,6 @@ fi
 
 echo "Building SafeCUDA in $BUILD_TYPE mode..."
 
-# Check if CUDA is available
 if ! command -v nvcc &>/dev/null; then
         echo "Error: nvcc not found. Please install CUDA development tools."
 		echo "$PATH"
@@ -27,15 +26,14 @@ echo "Using CUDA compiler: $(which nvcc)"
 echo "CUDA version: $(nvcc --version | grep release)"
 
 mkdir -p "$BUILD_DIR"
-cd "$BUILD_DIR"
 
 cmake -G Ninja \
         -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
         -DCMAKE_CUDA_HOST_COMPILER="$NVCC_CCBIN" \
         -DCMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets" \
-        ..
+      -B "$BUILD_DIR"
 
-ninja -j"$N_JOBS"
+ninja -C "$BUILD_DIR" -j"$N_JOBS"
 
 echo "Build complete! Binaries are in $BUILD_DIR/"
 echo "Run tests by running ctest in $BUILD_DIR/ or with the test script."
