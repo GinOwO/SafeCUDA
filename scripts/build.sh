@@ -7,6 +7,8 @@ N_JOBS=${2:-$(nproc)}
 
 export PATH=/usr/local/cuda/bin:$PATH
 export NVCC_CCBIN="/usr/local/cuda/bin/g++"
+# export PATH=/opt/cuda/bin:$PATH
+# export NVCC_CCBIN="/opt/cuda/bin/g++"
 
 if [[ "$BUILD_TYPE" != "Debug" && "$BUILD_TYPE" != "Release" ]]; then
         echo "Error: Build type must be 'Debug' or 'Release'"
@@ -25,6 +27,7 @@ fi
 
 echo "Using CUDA compiler: $(which nvcc)"
 echo "CUDA version: $(nvcc --version | grep release)"
+echo "g++ version: $(g++ --version)" 
 
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
@@ -33,6 +36,8 @@ cmake -G Ninja \
         -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
         -DCMAKE_CUDA_HOST_COMPILER="$NVCC_CCBIN" \
         -DCMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets" \
+		-DCMAKE_CXX_COMPILER="/usr/local/cuda/bin/g++" \
+		-DCMAKE_C_COMPILER="/usr/local/cuda/bin/gcc" \
         ..
 
 ninja -j"$N_JOBS"
