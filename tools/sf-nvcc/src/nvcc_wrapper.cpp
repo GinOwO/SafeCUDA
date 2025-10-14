@@ -48,13 +48,13 @@ inline fs::path sf_nvcc::TemporaryFileManager::get_working_dir() const noexcept
 	return this->dir_path;
 }
 
-std::vector<fs::path>
-sf_nvcc::TemporaryFileManager::filter_ptx_paths() const noexcept
-{
-	return temp_files | std::views::filter([](const fs::path &p) {
-		       return p.extension() == ".ptx";
-	       }) |
-	       std::ranges::to<std::vector<fs::path>>();
+std::vector<fs::path> sf_nvcc::TemporaryFileManager::filter_ptx_paths() const noexcept {
+    std::vector<fs::path> result;
+    for (const auto& p : temp_files) {
+        if (p.extension() == ".ptx")
+            result.push_back(p);
+    }
+    return result;
 }
 
 std::vector<fs::path>
