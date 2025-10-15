@@ -11,6 +11,9 @@
  *
  * Change Log:
  * - 2025-09-22: Initial implementation
+ * - 2025-10-11: Revised code to be device and host side functions.
+ * - 2025-10-15: Revised code to make class vars non-static and redeclare
+ *		constructor, destructor etc. Also some other code changes.
  */
 
 #ifndef SAFECACHE_H
@@ -39,22 +42,37 @@ struct CacheEntry {
 
 class DynamicCache {
     private:
-	static CacheEntry *d_buf;
-	static size_t d_size;
-	static size_t d_capacity;
+	CacheEntry *d_buf;
+	size_t d_size;
+	size_t d_capacity;
 
     public:
-	__host__ static void init(size_t initial_capacity = 16);
-	__host__ static void destroy();
+	__host__ __device__
+	explicit DynamicCache(size_t initial_capacity);
 
-	__host__ static void _check_cuda(cudaError_t err);
-	__host__ static CacheEntry _init_cache_entry(uintptr_t address,
+	__host__ __device__
+	~DynamicCache();
+
+	__host__ __device__
+	DynamicCache(const DynamicCache &) = delete;
+
+	__host__ __device__
+	DynamicCache &operator=(const DynamicCache &) = delete;
+
+	__host__ __device__
+	DynamicCache(DynamicCache &&) = delete;
+
+	__host__ __device__
+	DynamicCache &operator=(DynamicCache &&) = delete;
+
+	__host__ [[noreturn]] static void _check_cuda(cudaError_t err);
+	__host__ [[nodiscard]] static CacheEntry _init_cache_entry(uintptr_t address,
 						     size_t size);
-	__host__ static void _extend_cache();
+	__host__ void _extend_cache();
 
-	__host__ static void push(uintptr_t address, size_t size);
+	__host__ void push(uintptr_t address, size_t size);
 
-	__host__ __device__ static bool search(uintptr_t address);
+	__host__ __device__ [[nodiscard]] bool search(uintptr_t address) const;
 };
 
 }
