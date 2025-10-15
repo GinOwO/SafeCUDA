@@ -47,27 +47,22 @@ class DynamicCache {
 	size_t d_capacity;
 
     public:
-	__host__ __device__
-	explicit DynamicCache(size_t initial_capacity);
+	__host__ __device__ explicit DynamicCache(size_t initial_capacity);
 
-	__host__ __device__
-	~DynamicCache();
+	__host__ __device__ ~DynamicCache();
 
-	__host__ __device__
-	DynamicCache(const DynamicCache &) = delete;
+	__host__ __device__ DynamicCache(const DynamicCache &) = delete;
 
-	__host__ __device__
-	DynamicCache &operator=(const DynamicCache &) = delete;
+	__host__ __device__ DynamicCache &
+	operator=(const DynamicCache &) = delete;
 
-	__host__ __device__
-	DynamicCache(DynamicCache &&) = delete;
+	__host__ __device__ DynamicCache(DynamicCache &&) = delete;
 
-	__host__ __device__
-	DynamicCache &operator=(DynamicCache &&) = delete;
+	__host__ __device__ DynamicCache &operator=(DynamicCache &&) = delete;
 
 	__host__ [[noreturn]] static void _check_cuda(cudaError_t err);
-	__host__ [[nodiscard]] static CacheEntry _init_cache_entry(uintptr_t address,
-						     size_t size);
+	__host__ [[nodiscard]] static CacheEntry
+	_init_cache_entry(uintptr_t address, size_t size);
 	__host__ void _extend_cache();
 
 	__host__ void push(uintptr_t address, size_t size);

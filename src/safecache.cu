@@ -26,23 +26,26 @@ extern "C" __managed__ void *dynamic_cache = nullptr;
 
 namespace safecuda::cache
 {
-DynamicCache::DynamicCache(size_t initial_capacity)
-	: d_buf(nullptr), d_size(0), d_capacity(initial_capacity)
+DynamicCache::DynamicCache(const size_t initial_capacity)
+	: d_buf(nullptr)
+	, d_size(0)
+	, d_capacity(initial_capacity)
 {
-
 	if (dynamic_cache) {
 		d_buf = static_cast<CacheEntry *>(dynamic_cache);
 		return;
 	}
 
-	_check_cuda(cudaMallocManaged(&dynamic_cache, initial_capacity * sizeof(CacheEntry)));
+	_check_cuda(cudaMallocManaged(&dynamic_cache,
+				      initial_capacity * sizeof(CacheEntry)));
 	d_buf = static_cast<CacheEntry *>(dynamic_cache);
 	d_size = 0;
 }
 
 DynamicCache::~DynamicCache()
 {
-	if (d_buf) cudaFree(d_buf);
+	if (d_buf)
+		cudaFree(d_buf);
 	d_buf = nullptr;
 	d_size = 0;
 	d_capacity = 0;
@@ -58,7 +61,7 @@ inline void DynamicCache::_check_cuda(const cudaError_t err)
 }
 
 inline CacheEntry DynamicCache::_init_cache_entry(const uintptr_t address,
-					   const size_t size)
+						  const size_t size)
 {
 	return CacheEntry(address, size);
 }
