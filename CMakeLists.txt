@@ -35,8 +35,10 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
 endif()
 
 add_library(safecuda SHARED
-    src/safecuda.cpp
-    src/safecuda.cu
+        src/safecuda.cpp
+        src/safecuda.cu
+        src/memtable.cpp
+        src/safecache.cu
 )
 
 target_link_libraries(safecuda 

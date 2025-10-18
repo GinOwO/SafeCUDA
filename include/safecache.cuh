@@ -47,9 +47,9 @@ class DynamicCache {
 	size_t d_capacity;
 
     public:
-	__host__ __device__ explicit DynamicCache(size_t initial_capacity);
+	__host__ explicit DynamicCache(size_t initial_capacity);
 
-	__host__ __device__ ~DynamicCache();
+	__host__ ~DynamicCache();
 
 	__host__ __device__ DynamicCache(const DynamicCache &) = delete;
 
