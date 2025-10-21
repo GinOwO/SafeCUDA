@@ -33,30 +33,30 @@ extern "C" cudaError_t cudaMallocManaged(void **devPtr, size_t size, unsigned in
 
 	size_t newSize = size + sizeof(safecuda::memtable::Header);
 	void *basePtr = nullptr;
-	safecuda::memtable::Entry* entry = nullptr;
-
-	cudaError_t entry_result = safecuda::real_cudaMallocManaged(reinterpret_cast<void**>(&entry), sizeof(safecuda::memtable::Entry), flags);
-	if (entry_result == cudaSuccess)
-		std::cerr << "[SafeCUDA] Entry Allocation succeeded.\n";
-	else
-		std::cerr << "[SafeCUDA] Entry Allocation failed: " << cudaGetErrorString(entry_result) << "\n";
 
 	cudaError_t result = safecuda::real_cudaMallocManaged(&basePtr, newSize, flags);
 
-	*devPtr = safecuda::memtable::init_header(basePtr, size, 2, 2, entry);
-	safecuda::memtable::validate_header(*devPtr);
+	if (result == cudaSuccess)
+		std::cerr << "[SafeCUDA] Allocation succeeded.\n";
+	else
+		std::cerr << "[SafeCUDA] Allocation failed: " << cudaGetErrorString(result) << "\n";
 
-	safecuda::dynamic_cache->push(reinterpret_cast<uintptr_t>(*devPtr), static_cast<size_t>(newSize));
+	*devPtr = safecuda::memtable::init_header(basePtr);
+
+	safecuda::cache::CacheEntry* entry_ptr = safecuda::dynamic_cache->push(reinterpret_cast<std::uintptr_t>(*devPtr), static_cast<std::uint32_t>(size), 0, 0);
+
 	bool res = safecuda::dynamic_cache->search(reinterpret_cast<uintptr_t>(*devPtr));
 	if(res == true)
 		std::cerr << "[SafeCUDA] Found " << reinterpret_cast<uintptr_t>(*devPtr) << " entry in memory.\n";
 	else
 		std::cerr << "[SafeCUDA] entry not found in memory.\n";
 
-	if (result == cudaSuccess)
-		std::cerr << "[SafeCUDA] Allocation succeeded.\n";
-	else
-		std::cerr << "[SafeCUDA] Allocation failed: " << cudaGetErrorString(result) << "\n";
+	safecuda::memtable::Header *header = reinterpret_cast<safecuda::memtable::Header*>(basePtr);
+	header->entry = entry_ptr;
+
+	std::cerr << "entry-start_addr - " << reinterpret_cast<uintptr_t>(header->entry->start_addr) << std::endl;
+	std::cerr << "entry-size - " << header->entry->block_size << std::endl;
+	std::cerr << "magic_word - " << header->magic_word << std::endl;
 
 	return result;
 }
@@ -69,12 +69,7 @@ extern "C" cudaError_t cudaFree(void* devPtr) {
 
 	std::cerr << "[SafeCUDA] Intercepted cudaFree" << "\n";
 	void* todelete = reinterpret_cast<void*>(reinterpret_cast<std::uint8_t*>(devPtr) - sizeof(safecuda::memtable::Header));
-
-	cudaError_t entry_result = safecuda::real_cudaFree(safecuda::memtable::delete_entry(todelete));
-	if (entry_result == cudaSuccess)
-		std::cerr << "[SafeCUDA] Entry DeAllocation succeeded.\n";
-	else
-		std::cerr << "[SafeCUDA] Entry DeAllocation failed: " << cudaGetErrorString(entry_result) << "\n";
+	safecuda::memtable::delete_entry(todelete);
 
 	cudaError_t result = safecuda::real_cudaFree(todelete);
 	if (result == cudaSuccess)
@@ -104,7 +99,7 @@ namespace safecuda{
 			std::cerr << "[SafeCUDA] d_cache Allocation succeeded.\n";
 		else
 			std::cerr << "[SafeCUDA] d_cache DeAllocation failed: " << cudaGetErrorString(result) << "\n";
-		new (dynamic_cache) safecuda::cache::DynamicCache(5);
+		new (dynamic_cache) safecuda::cache::DynamicCache(1024);
 
 		return;
 	}
