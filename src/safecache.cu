@@ -86,10 +86,12 @@ inline void DynamicCache::_check_cuda(const cudaError_t err)
 	}
 }
 
-inline CacheEntry DynamicCache::_init_cache_entry(const uintptr_t address,
-						  const size_t size)
+inline CacheEntry DynamicCache::_init_cache_entry(const std::uintptr_t address,
+					     const std::uint32_t  size,
+					     const std::uint8_t flags,
+					     const std::uint32_t epochs)
 {
-	return CacheEntry(address, size);
+	return CacheEntry(address, size, flags, epochs);
 }
 
 void DynamicCache::_extend_cache()
@@ -114,7 +116,10 @@ void DynamicCache::_extend_cache()
 	return;
 }
 
-void DynamicCache::push(const uintptr_t address, const size_t size)
+CacheEntry* DynamicCache::push(const std::uintptr_t address,
+			const std::uint32_t  size,
+			const std::uint8_t flags,
+			const std::uint32_t epochs)
 {
 	if (!d_buf) {
 		std::fprintf(stderr, "DynamicCache not initialized\n");
@@ -125,14 +130,14 @@ void DynamicCache::push(const uintptr_t address, const size_t size)
 		_extend_cache();
 	}
 
-	d_buf[d_size++] = _init_cache_entry(address, size);
-	return;
+	d_buf[d_size] = _init_cache_entry(address, size, flags, epochs);
+	return &d_buf[d_size++];
 }
 
 bool DynamicCache::search(const uintptr_t address) const
 {
 	for (size_t i = 0; i < d_size; ++i) {
-		if (d_buf[i].start_address == address) {
+		if (d_buf[i].start_addr == address) {
 			return true;
 		}
 	}
