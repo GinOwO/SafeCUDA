@@ -37,6 +37,8 @@ option(BUILD_SAFECUDA_EXAMPLES "Build SafeCUDA examples" ON)
 add_library(safecuda SHARED
         src/safecuda.cpp
         src/safecuda.cu
+        src/memtable.cpp
+        src/safecache.cu
 )
 
 target_link_libraries(safecuda
