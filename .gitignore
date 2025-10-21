@@ -63,6 +63,7 @@ CTestTestfile.cmake
 _deps
 CMakeUserPresets.json
 cmake-build-*/
+*/build/
 
 # JetBrains files
 .idea/
@@ -72,3 +73,6 @@ out/
 
 # Visual Studio Code
 .vscode/
+
+example
+example_nvcc

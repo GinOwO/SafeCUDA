@@ -7,10 +7,11 @@
  * 
  * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
  * @date 2025-07-06
- * @version 0.0.1
+ * @version 1.0.0
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  * 
  * Change Log:
+ * - 2025-09-23: Rewrote some comments
  * - 2025-07-06: Initial implementation
  */
 
@@ -33,8 +34,6 @@ using namespace cuda_linking_tests;
  * 
  * @param data Device pointer to floating-point array
  * @param size Number of elements in the array
- * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
- * @version 0.0.1
  */
 __global__ void test_kernel(float *data, int size)
 {
@@ -54,8 +53,6 @@ __global__ void test_kernel(float *data, int size)
  * @param data Device pointer to floating-point array
  * @param size Number of elements in the array
  * @param pattern Base pattern value to initialize with
- * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
- * @version 0.0.1
  */
 __global__ void memory_pattern_kernel(float *data, int size, float pattern)
 {
@@ -74,8 +71,6 @@ __global__ void memory_pattern_kernel(float *data, int size, float pattern)
  * 
  * @param x Input value for computation
  * @return Computed result (x^2 + 1)
- * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
- * @version 0.0.1
  */
 __device__ float device_only_function(float x)
 {
@@ -91,8 +86,6 @@ __device__ float device_only_function(float x)
  * 
  * @param data Device pointer to data array
  * @param size Number of elements to process
- * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
- * @version 0.0.1
  */
 __global__ void advanced_test_kernel(float *data, int size)
 {
@@ -125,8 +118,6 @@ __global__ void advanced_test_kernel(float *data, int size)
  * @param d_data Device pointer to data array
  * @param size Number of elements to process
  * @throws std::runtime_error if kernel launch fails
- * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
- * @version 0.0.1
  */
 extern "C" void cuda_linking_tests::launch_test_kernel(float *d_data, int size)
 {
@@ -166,8 +157,6 @@ extern "C" void cuda_linking_tests::launch_test_kernel(float *d_data, int size)
  * @param size Number of elements to initialize
  * @param pattern Base pattern value for initialization
  * @throws std::runtime_error if kernel launch fails
- * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
- * @version 0.0.1
  */
 extern "C" void cuda_linking_tests::launch_memory_pattern_kernel(float *d_data,
 								 int size,
@@ -208,8 +197,6 @@ extern "C" void cuda_linking_tests::launch_memory_pattern_kernel(float *d_data,
  * @param d_data Device pointer to data array
  * @param size Number of elements to process
  * @throws std::runtime_error if kernel launch fails
- * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
- * @version 0.0.1
  */
 extern "C" void cuda_linking_tests::launch_advanced_test_kernel(float *d_data,
 								int size)

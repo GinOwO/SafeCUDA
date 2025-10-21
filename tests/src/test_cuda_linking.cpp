@@ -11,6 +11,7 @@
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  * 
  * Change Log:
+ * - 2025-09-23: Rewrote some comments
  * - 2025-07-06: Initial implementation with Google Test
  */
 
@@ -29,9 +30,6 @@ using namespace cuda_linking_tests;
  * Ensures each test starts with a fresh CUDA context by resetting
  * the device. This prevents state leakage between tests and ensures
  * consistent test behavior.
- * 
- * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
- * @version 0.0.1
  */
 void CudaLinkingTest::SetUp()
 {
@@ -47,9 +45,6 @@ void CudaLinkingTest::SetUp()
  * 
  * Resets the CUDA device to ensure no state leakage affects
  * subsequent tests. Handles potential errors gracefully.
- * 
- * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
- * @version 0.0.1
  */
 void CudaLinkingTest::TearDown()
 {
@@ -120,9 +115,6 @@ bool CudaLinkingTest::check_cuda_error(cudaError_t error,
  * Verifies that CUDA runtime can detect and enumerate available
  * GPU devices. This test catches driver issues, CUDA installation
  * problems, and basic hardware compatibility issues.
- * 
- * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
- * @version 0.0.1
  */
 TEST_F(CudaLinkingTest, DeviceDetection)
 {
@@ -147,9 +139,6 @@ TEST_F(CudaLinkingTest, DeviceDetection)
  * Verifies that basic GPU memory management operations work correctly.
  * Tests allocation of various sizes and proper cleanup to catch memory
  * management issues early in development.
- * 
- * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
- * @version 0.0.1
  */
 TEST_F(CudaLinkingTest, MemoryAllocation)
 {
@@ -183,7 +172,8 @@ TEST_F(CudaLinkingTest, MemoryAllocation)
  * This test verifies the entire CUDA memory subsystem.
  * 
  * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
- * @version 0.0.1
+ * @version 1.0.0
+ * 
  */
 TEST_F(CudaLinkingTest, MemoryOperations)
 {
@@ -224,9 +214,6 @@ TEST_F(CudaLinkingTest, MemoryOperations)
  * Verifies that CUDA kernels can be launched successfully and produce
  * correct results. Tests multiple kernel types to verify the complete
  * CUDA compilation and execution pipeline.
- * 
- * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
- * @version 0.0.1
  */
 TEST_F(CudaLinkingTest, KernelExecution)
 {
@@ -289,9 +276,6 @@ TEST_F(CudaLinkingTest, KernelExecution)
  * Verifies that complex kernels with device function calls and
  * multiple operations work correctly. This tests the CUDA compiler's
  * ability to handle sophisticated device code.
- * 
- * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
- * @version 0.0.1
  */
 TEST_F(CudaLinkingTest, AdvancedKernelFeatures)
 {
