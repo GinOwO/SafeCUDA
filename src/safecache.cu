@@ -21,6 +21,9 @@
 #include <cstdint>
 #include <cstddef>
 #include <cstdio>
+#include <iostream>
+
+#include "safecuda.h"
 
 extern "C" __managed__ void *dynamic_cache = nullptr;
 
@@ -31,24 +34,47 @@ DynamicCache::DynamicCache(const size_t initial_capacity)
 	, d_size(0)
 	, d_capacity(initial_capacity)
 {
+/*
 	if (dynamic_cache) {
-		d_buf = static_cast<CacheEntry *>(dynamic_cache);
+		d_buf = reinterpret_cast<CacheEntry *>(dynamic_cache);
 		return;
 	}
 
-	_check_cuda(cudaMallocManaged(&dynamic_cache,
-				      initial_capacity * sizeof(CacheEntry)));
-	d_buf = static_cast<CacheEntry *>(dynamic_cache);
+	cudaError_t result = safecuda::real_cudaMallocManaged(reinterpret_cast<void**>(&d_buf), 5 * sizeof(CacheEntry), cudaMemAttachGlobal);
+	if (result == cudaSuccess)
+		std::cerr << "[SafeCUDA] Dynamic Cache Allocation succeeded.\n";
+	else
+		std::cerr << "[SafeCUDA] Dynamic Cache Allocation failed: " << cudaGetErrorString(result) << "\n";
+
+	d_buf = reinterpret_cast<CacheEntry *>(dynamic_cache);
 	d_size = 0;
+*/
+
+	cudaError_t result = safecuda::real_cudaMallocManaged(reinterpret_cast<void**>(&d_buf), initial_capacity * sizeof(CacheEntry), cudaMemAttachGlobal);
+	if (result == cudaSuccess)
+		std::cerr << "[SafeCUDA] d_buf Allocation succeeded.\n";
+	else
+		std::cerr << "[SafeCUDA] d_buf Allocation failed: " << cudaGetErrorString(result) << "\n";
+	d_size = 0;
+
+	return;
+
 }
 
 DynamicCache::~DynamicCache()
 {
-	if (d_buf)
-		cudaFree(d_buf);
+	if (d_buf){
+		cudaError_t result = safecuda::real_cudaFree(d_buf);
+		if (result == cudaSuccess)
+			std::cerr << "[SafeCUDA] d_buf DeAllocation succeeded.\n";
+		else
+			std::cerr << "[SafeCUDA] d_buf DeAllocation failed: " << cudaGetErrorString(result) << "\n";
+	}
+
 	d_buf = nullptr;
 	d_size = 0;
 	d_capacity = 0;
+	return;
 }
 
 inline void DynamicCache::_check_cuda(const cudaError_t err)
@@ -60,10 +86,12 @@ inline void DynamicCache::_check_cuda(const cudaError_t err)
 	}
 }
 
-inline CacheEntry DynamicCache::_init_cache_entry(const uintptr_t address,
-						  const size_t size)
+inline CacheEntry DynamicCache::_init_cache_entry(const std::uintptr_t address,
+					     const std::uint32_t  size,
+					     const std::uint8_t flags,
+					     const std::uint32_t epochs)
 {
-	return CacheEntry(address, size);
+	return CacheEntry(address, size, flags, epochs);
 }
 
 void DynamicCache::_extend_cache()
@@ -74,18 +102,24 @@ void DynamicCache::_extend_cache()
 	const size_t new_capacity = d_capacity * 2;
 	CacheEntry *new_buf = nullptr;
 	_check_cuda(
-		cudaMallocManaged(&new_buf, new_capacity * sizeof(CacheEntry)));
+		safecuda::real_cudaMallocManaged(reinterpret_cast<void**>(&new_buf), new_capacity * sizeof(CacheEntry), cudaMemAttachGlobal)
+	);
 
 	for (size_t i = 0; i < d_size; ++i) {
 		new_buf[i] = d_buf[i];
 	}
 
-	cudaFree(d_buf);
+	safecuda::real_cudaFree(d_buf);
 	d_buf = new_buf;
 	d_capacity = new_capacity;
+
+	return;
 }
 
-void DynamicCache::push(const uintptr_t address, const size_t size)
+CacheEntry* DynamicCache::push(const std::uintptr_t address,
+			const std::uint32_t  size,
+			const std::uint8_t flags,
+			const std::uint32_t epochs)
 {
 	if (!d_buf) {
 		std::fprintf(stderr, "DynamicCache not initialized\n");
@@ -96,13 +130,14 @@ void DynamicCache::push(const uintptr_t address, const size_t size)
 		_extend_cache();
 	}
 
-	d_buf[d_size++] = _init_cache_entry(address, size);
+	d_buf[d_size] = _init_cache_entry(address, size, flags, epochs);
+	return &d_buf[d_size++];
 }
 
 bool DynamicCache::search(const uintptr_t address) const
 {
 	for (size_t i = 0; i < d_size; ++i) {
-		if (d_buf[i].start_address == address) {
+		if (d_buf[i].start_addr == address) {
 			return true;
 		}
 	}

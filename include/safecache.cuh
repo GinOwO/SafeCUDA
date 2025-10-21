@@ -29,13 +29,19 @@ namespace safecuda::cache
 {
 
 struct CacheEntry {
-	uintptr_t start_address;
-	size_t size;
+	std::uintptr_t start_addr;
+	std::uint32_t block_size;
+	std::uint8_t flags;
+	std::uint32_t epochs;
 
-	__host__ __device__ explicit CacheEntry(const uintptr_t address = 0,
-						const size_t size = 0)
-		: start_address(address)
-		, size(size)
+	__host__ __device__ explicit CacheEntry(const std::uintptr_t start_addr = 0,
+					   const std::uint32_t block_size = 0,
+					   const std::uint8_t flags = 0,
+					   const std::uint32_t epochs = 0)
+	    : start_addr(start_addr)
+	    , block_size(block_size)
+	    , flags(flags)
+	    , epochs(epochs)
 	{
 	}
 };
@@ -47,9 +53,9 @@ class DynamicCache {
 	size_t d_capacity;
 
     public:
-	__host__ __device__ explicit DynamicCache(size_t initial_capacity);
+	__host__ explicit DynamicCache(size_t initial_capacity);
 
-	__host__ __device__ ~DynamicCache();
+	__host__ ~DynamicCache();
 
 	__host__ __device__ DynamicCache(const DynamicCache &) = delete;
 
@@ -62,10 +68,10 @@ class DynamicCache {
 
 	__host__ [[noreturn]] static void _check_cuda(cudaError_t err);
 	__host__ [[nodiscard]] static CacheEntry
-	_init_cache_entry(uintptr_t address, size_t size);
+	_init_cache_entry(const std::uintptr_t address, const std::uint32_t  size, const std::uint8_t flags, const std::uint32_t epochs);
 	__host__ void _extend_cache();
 
-	__host__ void push(uintptr_t address, size_t size);
+	__host__ CacheEntry* push(const std::uintptr_t address, const std::uint32_t  size, const std::uint8_t flags, const std::uint32_t epochs);
 
 	__host__ __device__ [[nodiscard]] bool search(uintptr_t address) const;
 };
