@@ -11,8 +11,8 @@
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  * 
  * Change Log:
- * - 2025-09-23: Rewrote some comments
  * - 2025-07-06: Initial implementation
+ * - 2025-09-23: Rewrote some comments
  */
 
 #include "test_cuda_linking.h"

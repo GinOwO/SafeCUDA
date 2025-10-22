@@ -26,8 +26,9 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DDEBUG)
 elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
     message(STATUS "Building in Release mode")
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
-    set(CMAKE_CUDA_FLAGS_RELEASE "-O3 -DNDEBUG")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+    set(CMAKE_CUDA_FLAGS_RELEASE "-O3")
+    add_definitions(-DNDEBUG)
 endif ()
 
 option(BUILD_SAFECUDA_TOOLS "Build SafeCUDA tools (sf-nvcc)" ON)
@@ -36,8 +37,6 @@ option(BUILD_SAFECUDA_EXAMPLES "Build SafeCUDA examples" ON)
 # Build libsafecuda ------------------------------------------------------------
 add_library(safecuda SHARED
         src/safecuda.cpp
-        src/safecuda.cu
-        src/memtable.cpp
         src/safecache.cu
 )
 
@@ -58,6 +57,36 @@ target_compile_options(safecuda PRIVATE
 )
 
 target_compile_definitions(safecuda PRIVATE
+        PROJECT_VERSION_MAJOR="${PROJECT_VERSION_MAJOR}"
+        PROJECT_VERSION_MINOR="${PROJECT_VERSION_MINOR}"
+        PROJECT_VERSION_PATCH="${PROJECT_VERSION_PATCH}"
+        PROJECT_VERSION="${PROJECT_VERSION}"
+)
+
+# Build libsafecuda_device -----------------------------------------------------
+add_library(safecuda_device STATIC
+        src/safecache.cu
+)
+
+
+target_link_libraries(safecuda_device
+        CUDA::cudart_static
+)
+
+set_target_properties(safecuda_device PROPERTIES
+        CUDA_SEPARABLE_COMPILATION ON
+        CUDA_RESOLVE_DEVICE_SYMBOLS OFF
+        POSITION_INDEPENDENT_CODE ON
+)
+
+target_compile_options(safecuda_device PRIVATE
+        $<$<COMPILE_LANGUAGE:CUDA>:--extended-lambda>
+        $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
+        $<$<COMPILE_LANGUAGE:CUDA>:-rdc=true>
+        $<$<COMPILE_LANGUAGE:CUDA>:-dc>
+)
+
+target_compile_definitions(safecuda_device PRIVATE
         PROJECT_VERSION_MAJOR="${PROJECT_VERSION_MAJOR}"
         PROJECT_VERSION_MINOR="${PROJECT_VERSION_MINOR}"
         PROJECT_VERSION_PATCH="${PROJECT_VERSION_PATCH}"

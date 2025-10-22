@@ -21,60 +21,39 @@
 #define SAFECACHE_H
 
 #include <cstdint>
-#include <cuda_runtime.h>
 
-extern "C" __managed__ void *dynamic_cache;
-
-namespace safecuda::cache
+namespace safecuda::memory
 {
 
-struct CacheEntry {
+struct Entry {
 	std::uintptr_t start_addr;
 	std::uint32_t block_size;
-	std::uint8_t flags;
+	std::uint32_t flags;
 	std::uint32_t epochs;
-
-	__host__ __device__ explicit CacheEntry(
-		const std::uintptr_t start_addr = 0,
-		const std::uint32_t block_size = 0,
-		const std::uint8_t flags = 0, const std::uint32_t epochs = 0)
-		: start_addr(start_addr)
-		, block_size(block_size)
-		, flags(flags)
-		, epochs(epochs){};
 };
 
-class DynamicCache {
-	CacheEntry *d_buf;
-	size_t d_size;
-	size_t d_capacity;
-
-    public:
-	__host__ explicit DynamicCache(size_t initial_capacity);
-
-	__host__ ~DynamicCache();
-
-	__host__ __device__ DynamicCache(const DynamicCache &) = delete;
-
-	__host__ __device__ DynamicCache &
-	operator=(const DynamicCache &) = delete;
-
-	__host__ __device__ DynamicCache(DynamicCache &&) = delete;
-
-	__host__ __device__ DynamicCache &operator=(DynamicCache &&) = delete;
-
-	__host__ static void _check_cuda(cudaError_t err);
-	__host__ [[nodiscard]] static CacheEntry
-	_init_cache_entry(std::uintptr_t address, std::uint32_t size,
-			  std::uint8_t flags, std::uint32_t epochs);
-	__host__ void _extend_cache();
-
-	__host__ CacheEntry *push(std::uintptr_t address, std::uint32_t size,
-				  std::uint8_t flags, std::uint32_t epochs);
-
-	__host__ __device__ [[nodiscard]] bool search(uintptr_t address) const;
+struct Metadata {
+	std::uint16_t magic;
+	std::uint8_t padding[6];
+	Entry *entry;
 };
 
+struct AllocationTable {
+	Entry entries[1024];
+	std::uint32_t count;
+	std::uint32_t capacity;
+};
+
+enum ErrorCode {
+	ERROR_OUT_OF_BOUNDS = 1,
+	ERROR_FREED_MEMORY = 2,
+	ERROR_INVALID_POINTER = 3
+};
 }
+
+extern "C" cudaError_t
+set_device_table_pointer(safecuda::memory::AllocationTable *ptr);
+
+extern "C" __device__ void __bounds_check_safecuda(void *ptr);
 
 #endif

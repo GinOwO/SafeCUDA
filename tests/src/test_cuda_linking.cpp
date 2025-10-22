@@ -150,8 +150,8 @@ TEST_F(CudaLinkingTest, MemoryAllocation)
 
 	for (size_t test_size : test_sizes) {
 		void *d_ptr = nullptr;
-
 		cudaError_t err = cudaMalloc(&d_ptr, test_size);
+
 		ASSERT_TRUE(check_cuda_error(
 			err,
 			"cudaMalloc for size " + std::to_string(test_size)));
@@ -159,6 +159,7 @@ TEST_F(CudaLinkingTest, MemoryAllocation)
 			<< "cudaMalloc returned null for size " << test_size;
 
 		err = cudaFree(d_ptr);
+
 		EXPECT_TRUE(check_cuda_error(
 			err, "cudaFree for size " + std::to_string(test_size)));
 	}

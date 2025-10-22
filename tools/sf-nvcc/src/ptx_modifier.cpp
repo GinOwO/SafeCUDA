@@ -11,6 +11,7 @@
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  *
  * Change Log:
+ * - 2025-10-23: Implemented __bounds_check_safecuda
  * - 2025-09-23: Now inserts bounds_check directly into every ptx file
  * - 2025-09-22: Initial Implementation
  * - 2025-08-12: Initial File
@@ -54,7 +55,8 @@ extractAddressRegister(const std::vector<std::string> &lexemes)
 static std::string generateBoundsCheckCall(const std::string &address_reg,
 					   const std::string &indentation)
 {
-	return indentation + "call bounds_check, (" + address_reg + ");";
+	return indentation + "call __bounds_check_safecuda, (" + address_reg +
+	       ");";
 }
 
 /**
@@ -137,6 +139,7 @@ static bool createBackupFile(const fs::path &ptx_path,
  * @param ptx_path Path to PTX file to modify
  * @param instructions Vector of identified global memory instructions
  * @param opts SafeCUDA options for logging and debugging
+ * @param result Stores the modification result
  * @return True if instrumentation successful, false otherwise
  */
 static bool
@@ -169,13 +172,12 @@ instrumentPTXFile(const fs::path &ptx_path,
 		const std::string &current_line = file_lines[line_num - 1];
 
 		if (current_line.starts_with(".address_size")) {
-			output_file << current_line << "\n\n"
-				    << R"ptx(.func bounds_check(
-	.param .b64 bounds_check_param_0
-)
-{
-	ret;
-}
+			output_file
+				<< current_line << "\n\n"
+				<< R"ptx(.extern .func __bounds_check_safecuda(
+    .param .b64 __bounds_check_safecuda_param_0
+);
+
 )ptx" << "\n\n";
 			continue;
 		}

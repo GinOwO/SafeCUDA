@@ -3,11 +3,18 @@
 set -e
 
 BUILD_TYPE=${1:-Debug}
-BUILD_DIR="cmake-build-$BUILD_TYPE"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+BUILD_DIR="$SCRIPT_DIR/../cmake-build-$BUILD_TYPE"
+PRELOAD_LIB="$BUILD_DIR/libsafecuda.so"
+
+if [[ ! -f "$PRELOAD_LIB" ]]; then
+    echo "Preload library '$PRELOAD_LIB' not found. Build the library first."
+    exit 1
+fi
 
 echo "Running tests for SafeCUDA..."
 cd "$BUILD_DIR"
-ctest --output-on-failure
+LD_PRELOAD="$PRELOAD_LIB" ctest --output-on-failure
 
 # shellcheck disable=SC2181
 if [[ $? -ne 0 ]]; then

@@ -14,120 +14,63 @@
  * - 2025-10-11: Revised code to be device and host side functions.
  * - 2025-10-15: Revised code to make class vars non-static and redeclare
  *		constructor, destructor etc. Also, some other code changes.
- * - 2025-10-22: Removed redundancies and fixed a [[noreturn]] bug on check_cuda
+ * - 2025-10-22: Removed redundancies and fixed a [[noreturn]] bug on
  */
 
 #include "safecache.cuh"
 
-#include "safecuda.h"
+__constant__ safecuda::memory::AllocationTable *d_table = nullptr;
 
-#include <cuda_runtime.h>
-#include <cstddef>
-#include <cstdint>
-#include <cstdio>
-#include <iostream>
-
-extern "C" __managed__ void *dynamic_cache = nullptr;
-
-namespace safecuda::cache
+extern "C" cudaError_t
+set_device_table_pointer(safecuda::memory::AllocationTable *ptr)
 {
-DynamicCache::DynamicCache(const size_t initial_capacity)
-	: d_buf(nullptr)
-	, d_size(0)
-	, d_capacity(initial_capacity)
-{
-	cudaError_t result = real_cudaMallocManaged(
-		reinterpret_cast<void **>(&d_buf),
-		initial_capacity * sizeof(CacheEntry), cudaMemAttachGlobal);
-	if (result == cudaSuccess)
-		std::cerr << "[SafeCUDA] d_buf Allocation succeeded.\n";
-	else
-		std::cerr << "[SafeCUDA] d_buf Allocation failed: "
-			  << cudaGetErrorString(result) << "\n";
-	d_size = 0;
+	return cudaMemcpyToSymbol(d_table, &ptr,
+				  sizeof(safecuda::memory::AllocationTable *));
 }
 
-DynamicCache::~DynamicCache()
+__device__ void __bounds_check_safecuda(void *ptr)
 {
-	if (d_buf) {
-		if (const cudaError_t result = real_cudaFree(d_buf);
-		    result == cudaSuccess)
-			std::cerr
-				<< "[SafeCUDA] d_buf DeAllocation succeeded.\n";
-		else
-			std::cerr << "[SafeCUDA] d_buf DeAllocation failed: "
-				  << cudaGetErrorString(result) << "\n";
+	const auto *meta = reinterpret_cast<safecuda::memory::Metadata *>(
+		static_cast<std::int8_t *>(ptr) - 16);
+	if (meta->magic == 0x5AFE) {
+		safecuda::memory::Entry *entry = meta->entry;
+		const auto addr = reinterpret_cast<std::uintptr_t>(ptr);
+		if (entry == nullptr)
+			goto slow;
+		if (entry->flags == 0) {
+			if (atomicCAS(&d_table->entries[0].flags, 0,
+				      safecuda::memory::ERROR_FREED_MEMORY) ==
+			    0) {
+				d_table->entries[0].start_addr = addr;
+			}
+			__trap();
+		}
+		if (addr >= entry->start_addr &&
+		    addr < entry->start_addr + entry->block_size)
+			return;
 	}
-
-	d_buf = nullptr;
-	d_size = 0;
-	d_capacity = 0;
-}
-
-inline void DynamicCache::_check_cuda(const cudaError_t err)
-{
-	if (err != cudaSuccess) {
-		std::fprintf(stderr, "CUDA Error %d: %s\n", err,
-			     cudaGetErrorString(err));
-		std::exit(EXIT_FAILURE);
-	}
-}
-
-inline CacheEntry DynamicCache::_init_cache_entry(const std::uintptr_t address,
-						  const std::uint32_t size,
-						  const std::uint8_t flags,
-						  const std::uint32_t epochs)
-{
-	return CacheEntry(address, size, flags, epochs);
-}
-
-void DynamicCache::_extend_cache()
-{
-	if (d_size < d_capacity)
-		return;
-
-	const size_t new_capacity = d_capacity * 2;
-	CacheEntry *new_buf = nullptr;
-	_check_cuda(real_cudaMallocManaged(reinterpret_cast<void **>(&new_buf),
-					   new_capacity * sizeof(CacheEntry),
-					   cudaMemAttachGlobal));
-
-	for (size_t i = 0; i < d_size; ++i) {
-		new_buf[i] = d_buf[i];
-	}
-
-	real_cudaFree(d_buf);
-	d_buf = new_buf;
-	d_capacity = new_capacity;
-}
-
-CacheEntry *DynamicCache::push(const std::uintptr_t address,
-			       const std::uint32_t size,
-			       const std::uint8_t flags,
-			       const std::uint32_t epochs)
-{
-	if (!d_buf) {
-		std::fprintf(stderr, "DynamicCache not initialized\n");
-		std::exit(EXIT_FAILURE);
-	}
-
-	if (d_size >= d_capacity) {
-		_extend_cache();
-	}
-
-	d_buf[d_size] = _init_cache_entry(address, size, flags, epochs);
-	return &d_buf[d_size++];
-}
-
-bool DynamicCache::search(const uintptr_t address) const
-{
-	for (size_t i = 0; i < d_size; ++i) {
-		if (d_buf[i].start_addr == address) {
-			return true;
+slow:
+	for (std::uint32_t i = 1; i < d_table->count; ++i) {
+		safecuda::memory::Entry *entry = &d_table->entries[i];
+		if (const auto addr = reinterpret_cast<std::uintptr_t>(ptr);
+		    addr >= entry->start_addr &&
+		    addr < entry->start_addr + entry->block_size) {
+			if (entry->flags == 0) {
+				if (atomicCAS(&d_table->entries[0].flags, 0,
+					      safecuda::memory::
+						      ERROR_FREED_MEMORY) ==
+				    0) {
+					d_table->entries[0].start_addr = addr;
+				}
+				__trap();
+			}
+			return;
 		}
 	}
-
-	return false;
-}
-
+	if (atomicCAS(&d_table->entries[0].flags, 0,
+		      safecuda::memory::ERROR_INVALID_POINTER) == 0) {
+		d_table->entries[0].start_addr =
+			reinterpret_cast<std::uintptr_t>(ptr);
+	}
+	__trap();
 }

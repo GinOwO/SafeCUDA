@@ -12,26 +12,31 @@
  * Change Log:
  * - 2025-07-05: Initial implementation
  * - 2025-10-18: Added basic lifecycle components to the header
- * - 2025-10-22: Removed redundancies and fixed styling
+ * - 2025-10-22: Removed redundancies, fixed styling added cudaMalloc
  */
 
 #ifndef SAFECUDA_H
 #define SAFECUDA_H
 
-#include "safecache.cuh"
+#include <cuda_runtime.h>
+#include <cstddef>
 
 namespace safecuda
 {
-using cudaMallocManaged_t = cudaError_t (*)(void **, size_t, unsigned int);
-using cudaFree_t = cudaError_t (*)(void *);
 
+using cudaMalloc_t = cudaError_t (*)(void **, std::size_t);
+using cudaMallocManaged_t = cudaError_t (*)(void **, std::size_t, unsigned int);
+using cudaFree_t = cudaError_t (*)(void *);
+using cudaDeviceSynchronize_t = cudaError_t (*)();
+
+extern cudaMalloc_t real_cudaMalloc;
 extern cudaMallocManaged_t real_cudaMallocManaged;
 extern cudaFree_t real_cudaFree;
+extern cudaDeviceSynchronize_t real_cudaDeviceSynchronize;
 
-void init_symbols() __attribute__((constructor));
-void shutdown() __attribute__((destructor));
+void init_safecuda();
+void shutdown_safecuda();
 
-extern __managed__ cache::DynamicCache *dynamic_cache;
 }
 
 #endif // SAFECUDA_H

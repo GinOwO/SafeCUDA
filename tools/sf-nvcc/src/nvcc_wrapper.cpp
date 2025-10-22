@@ -11,6 +11,7 @@
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  *
  * Change Log:
+ * - 2025-10-23: Integrated with libsafecuda_device.a for compilation
  * - 2025-09-23: Added support for resuming compilation of ptx with nvcc
  * - 2025-09-22: Added support for resuming compilation of modified ptx files
  * - 2025-08-13: Initial Implementation
@@ -27,6 +28,16 @@
 
 namespace sf_nvcc = safecuda::tools::sf_nvcc;
 namespace fs = std::filesystem;
+
+static constexpr char safecuda_lib[] =
+#ifdef NDEBUG
+	"./cmake-build-Release/libsafecuda_device.a"
+#elif DEBUG
+	return "./cmake-build-Debug/libsafecuda_device.a"
+#else
+	return "/usr/local/lib/libsafecuda_device.a"
+#endif
+	;
 
 sf_nvcc::TemporaryFileManager::TemporaryFileManager(
 	const SafeCudaOptions &sf_opts)
@@ -48,13 +59,15 @@ inline fs::path sf_nvcc::TemporaryFileManager::get_working_dir() const noexcept
 	return this->dir_path;
 }
 
-std::vector<fs::path> sf_nvcc::TemporaryFileManager::filter_ptx_paths() const noexcept {
-    std::vector<fs::path> result;
-    for (const auto& p : temp_files) {
-        if (p.extension() == ".ptx")
-            result.push_back(p);
-    }
-    return result;
+std::vector<fs::path>
+sf_nvcc::TemporaryFileManager::filter_ptx_paths() const noexcept
+{
+	std::vector<fs::path> result;
+	for (const auto &p : temp_files) {
+		if (p.extension() == ".ptx")
+			result.push_back(p);
+	}
+	return result;
 }
 
 std::vector<fs::path>
@@ -111,6 +124,12 @@ bool sf_nvcc::resume_nvcc(const std::vector<fs::path> &ptx_paths,
 {
 	const SafeCudaOptions &sf_opts = sf_nvcc_opts.safecuda_opts;
 	const NvccOptions &nvcc_opts = sf_nvcc_opts.nvcc_opts;
+
+	if (sf_opts.enable_verbose) {
+		std::cout << ACOL(ACOL_C, ACOL_BF)
+			  << "Using SafeCUDA library: " << ACOL_RESET()
+			  << safecuda_lib << "\n";
+	}
 
 	if (ptx_paths.empty()) {
 		std::cerr << ACOL(ACOL_R, ACOL_DF)
@@ -203,13 +222,14 @@ bool sf_nvcc::resume_nvcc(const std::vector<fs::path> &ptx_paths,
 		temp_mgr.add_file(ptx_obj_path);
 	}
 
-	// Device link PTX objects only
+	// Device link PTX objects + libsafecuda.so
 	fs::path dlink_path = temp_mgr.get_working_dir() / "kernels_dlink.o";
 	std::string dlink_command = "nvcc -dlink ";
 	for (const auto &obj : ptx_obj_paths) {
 		dlink_command += obj + " ";
 	}
-	dlink_command += "-o " + dlink_path.string();
+	dlink_command += safecuda_lib;
+	dlink_command += " -o " + dlink_path.string();
 
 	if (sf_opts.enable_verbose) {
 		std::cout << ACOL(ACOL_Y, ACOL_BF)
@@ -233,7 +253,8 @@ bool sf_nvcc::resume_nvcc(const std::vector<fs::path> &ptx_paths,
 		final_command += obj + " ";
 	}
 
-	final_command += dlink_path.string() + " -o " + nvcc_opts.output_path;
+	final_command += dlink_path.string() + " " + safecuda_lib;
+	final_command += " -o " + nvcc_opts.output_path;
 
 	if (sf_opts.enable_verbose) {
 		std::cout << ACOL(ACOL_Y, ACOL_BF)

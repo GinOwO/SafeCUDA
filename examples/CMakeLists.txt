@@ -42,9 +42,9 @@ add_executable(example
 )
 
 #target_compile_options(example PRIVATE
-#        $<$<COMPILE_LANGUAGE:CUDA>:-sf-debug>
 #        $<$<COMPILE_LANGUAGE:CUDA>:-sf-cache-size=1024>
 #        $<$<COMPILE_LANGUAGE:CUDA>:-sf-bounds-check>
+#        $<$<COMPILE_LANGUAGE:CUDA>:-sf-debug>
 #)
 
 target_compile_options(example PRIVATE
