@@ -2,7 +2,7 @@
 * @file memtable.h
  * @brief SafeCUDA metadata header file
  *
- * This file will contains the header file for the metadata table
+ * This file contains the header file for the metadata table
  *
  * @author Anirudh <anirudh.sridhar2022@vitstudent.ac.in>
  * @date 2025-09-22
@@ -11,28 +11,30 @@
  *
  * Change Log:
  * - 2025-09-22: Initial implementation
+ * - 2025-10-22: Removed redundancies and made padding work based on arch
  */
 #ifndef MEMTABLE_H
 #define MEMTABLE_H
 
-#include <cstdint>
-#include <cstddef>
 #include "safecache.cuh"
 
-namespace safecuda::memtable{
+#include <cstdint>
 
-	constexpr std::int16_t MAGIC_WORD = 0x5AFE;
+namespace safecuda::memtable
+{
 
-	struct Header {
-		std::int16_t magic_word = MAGIC_WORD;
-		std::int8_t _pad1[6];
-		safecuda::cache::CacheEntry *entry;
-		std::uintptr_t *memory;
-	};
+constexpr std::int16_t MAGIC_WORD = 0x5AFE;
 
-	std::uintptr_t* init_header(void *basePtr);
-	bool validate_header(void *basePtr);
-	void delete_entry(void *basePtr);
+struct Header {
+	std::int16_t magic_word = MAGIC_WORD;
+	std::int8_t _pad1[6] = {0};
+	cache::CacheEntry *entry = nullptr;
+	std::uintptr_t *memory = nullptr;
+};
+
+std::uintptr_t *init_header(void *base_ptr);
+bool validate_header(void *base_ptr);
+void delete_entry(void *base_ptr);
 
 }
 
