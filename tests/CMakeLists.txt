@@ -1,5 +1,14 @@
 # Include test sources
-file(GLOB TEST_SOURCES src/*.cpp src/*.cu)
+set(TEST_SOURCES
+        src/bootstrap_test.cpp
+        src/test_cuda_linking.cpp
+        src/test_cuda_linking.cu
+        src/test_safecuda_runtime.cpp
+        src/test_safecuda_runtime.cu
+        src/test_sf_nvcc_parsing.cpp
+        src/test_sf_nvcc_pattern_matching.cpp
+        src/test_sf_nvcc_ptx_injector.cpp
+)
 
 add_executable(safecuda_tests ${TEST_SOURCES})
 
@@ -15,6 +24,7 @@ target_include_directories(safecuda_tests PRIVATE
 
 target_link_libraries(safecuda_tests
         safecuda
+        safecuda_device
         sf-nvcc-lib
         GTest::GTest
         GTest::Main

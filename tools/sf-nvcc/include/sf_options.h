@@ -8,10 +8,11 @@
  *
  * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
  * @date 2025-08-13
- * @version 1.0.0
+ * @version 1.0.1
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  *
  * Change Log:
+ * - 2025-10-23: Changed fail fast functionality and so default is true now
  * - 2025-09-23: Rewrote stuff around NvccOptions
  * - 2025-09-22: Removed some switches, moved stuff around for more modularity
  * - 2025-08-13: Added output file switch
@@ -53,7 +54,7 @@ struct SafeCudaOptions {
 	bool enable_bounds_check = true; ///< Enable runtime bounds checking.
 	bool enable_debug = false; ///< Enable debug instrumentation.
 	bool enable_verbose = false; ///< Enable verbose logging.
-	bool fail_fast = false; ///< Abort on first violation.
+	bool fail_fast = true; ///< Abort on first violation.
 	bool log_violations = false; ///< Log memory violations.
 	std::string log_file{"stderr"}; ///< Path for violation logs.
 	std::string keep_dir; ///< Directory to store intermediate files.

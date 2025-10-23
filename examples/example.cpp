@@ -1,14 +1,17 @@
+#include <cuda_runtime.h>
 #include <iostream>
 #include <vector>
-#include <cuda_runtime.h>
 
 extern "C" void launchScaleArray(float *d_data, int n);
 extern "C" void launchAddOne(float *d_data, int n);
 extern "C" void monteCarloPi(int *d_count, int samples, int blocks, int threads,
 			     unsigned long seed);
+extern "C" void launchOutOfBoundsKernel(float *d_data, int n);
 
 int main()
 {
+	std::cout << "\n=== Test 1: Valid access (should work) ==="
+		  << std::endl;
 	constexpr int n = 10;
 	std::vector<float> h_data(n);
 	for (int i = 0; i < n; i++)
@@ -44,4 +47,30 @@ int main()
 
 	double pi = 4.0 * h_count / 1000000.0f;
 	std::cout << "Estimated π = " << pi << std::endl;
+
+	std::cout << "Valid access completed successfully!" << std::endl;
+
+	std::cout
+		<< "\n=== Test 2: Out-of-bounds access (should trigger error) ==="
+		<< std::endl;
+	constexpr int m = 1024;
+	const size_t bytes = m * sizeof(float);
+
+	float *h_data_err = new float[n];
+	for (int i = 0; i < n; ++i) {
+		h_data_err[i] = static_cast<float>(i);
+	}
+
+	float *d_data_err;
+	cudaMalloc(&d_data_err, bytes);
+	cudaMemcpy(d_data_err, h_data_err, bytes, cudaMemcpyHostToDevice);
+
+	launchOutOfBoundsKernel(d_data_err, m);
+	std::cout << "If you see this, the bounds check didn't work!"
+		  << std::endl;
+
+	cudaFree(d_data_err);
+	delete[] h_data_err;
+
+	return 0;
 }

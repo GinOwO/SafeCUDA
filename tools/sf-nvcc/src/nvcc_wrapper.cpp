@@ -11,7 +11,8 @@
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  *
  * Change Log:
- * - 2025-10-23: Integrated with libsafecuda_device.a for compilation
+ * - 2025-10-23: Integrated with libsafecuda_device.a for compilation,
+ *		modified functionality of fail fast
  * - 2025-09-23: Added support for resuming compilation of ptx with nvcc
  * - 2025-09-22: Added support for resuming compilation of modified ptx files
  * - 2025-08-13: Initial Implementation
@@ -33,9 +34,9 @@ static constexpr char safecuda_lib[] =
 #ifdef NDEBUG
 	"./cmake-build-Release/libsafecuda_device.a"
 #elif DEBUG
-	return "./cmake-build-Debug/libsafecuda_device.a"
+	"./cmake-build-Debug/libsafecuda_device.a"
 #else
-	return "/usr/local/lib/libsafecuda_device.a"
+	"/usr/local/lib/libsafecuda_device.a"
 #endif
 	;
 

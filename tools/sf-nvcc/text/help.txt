@@ -32,9 +32,9 @@ SAFECUDA OPTIONS
         Enable verbose compilation output (default: false)
         Displays arguments, PTX generation, modification steps, and compilation progress
 
-    -sf-fail-fast <true|FALSE>
-        Abort kernel execution on first bounds violation (default: false)
-        When false, violations are logged but execution continues
+    -sf-fail-fast <TRUE|false>
+        Abort kernel execution on first bounds violation (default: true)
+        When false, first violation is logged but kernel execution continues
 
     -sf-log-violations <true|FALSE>
         Set if violations should be logged or not (default: false)

@@ -12,6 +12,7 @@
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  *
  * Change Log:
+ * - 2025-10-23: Change fail fast test
  * - 2025-09-23: Minor renaming as part of a struct change
  * - 2025-09-22: Renamed File to be style compliant
  * - 2025-08-13: Initial implementation with Google Test
@@ -146,7 +147,7 @@ TEST_F(SfNvccParsingTest, DefaultOptionsValues)
 	EXPECT_TRUE(opts.enable_bounds_check);
 	EXPECT_FALSE(opts.enable_debug);
 	EXPECT_FALSE(opts.enable_verbose);
-	EXPECT_FALSE(opts.fail_fast);
+	EXPECT_TRUE(opts.fail_fast);
 	EXPECT_FALSE(opts.log_violations);
 	EXPECT_EQ(opts.log_file, "stderr");
 }

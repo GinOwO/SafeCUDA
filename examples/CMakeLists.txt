@@ -39,6 +39,7 @@ add_executable(example
         kernel1.cu
         kernel2.cu
         montecarlo.cu
+        out_of_bounds.cu
 )
 
 #target_compile_options(example PRIVATE
