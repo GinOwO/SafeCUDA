@@ -55,6 +55,7 @@ target_compile_options(example PRIVATE
 
 target_link_libraries(example
         safecuda
+        safecuda_device
         CUDA::cudart
         CUDA::cuda_driver
         ${CMAKE_DL_LIBS}

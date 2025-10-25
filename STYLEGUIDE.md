@@ -1103,7 +1103,7 @@ set(CMAKE_CUDA_STANDARD 17)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 
 # Clear variable naming with descriptive comments
-set(CUDA_ARCH_LIST 52 60 61 75 86)  # Support Maxwell through Ampere
+set(CUDA_ARCH_LIST 60 61 75 86)  # Support Maxwell through Ampere
 set(SAFECUDA_VERSION_MAJOR 1)
 set(SAFECUDA_VERSION_MINOR 0)
 

@@ -59,9 +59,9 @@ static std::string generateBoundsCheckCall(const std::string &address_reg,
 					   const bool fail_fast)
 {
 	if (fail_fast)
-		return indentation + "call __bounds_check_safecuda, (" +
+		return indentation + "call.uni __bounds_check_safecuda, (" +
 		       address_reg + ");";
-	return indentation + "call __bounds_check_safecuda_no_trap, (" +
+	return indentation + "call.uni __bounds_check_safecuda_no_trap, (" +
 	       address_reg + ");";
 }
 

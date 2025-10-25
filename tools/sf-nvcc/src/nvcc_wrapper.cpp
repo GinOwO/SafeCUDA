@@ -90,7 +90,7 @@ void sf_nvcc::generate_intermediate(const NvccOptions &nvcc_opts,
 		".ii", ".c", ".ptx", ".gpu", ".cubin"};
 
 	std::string command =
-		"nvcc -Wno-deprecated-gpu-targets --keep -dc -rdc=true --keep-dir=" +
+		"nvcc -Wno-deprecated-gpu-targets --keep -dc -rdc=true -lcudart --keep-dir=" +
 		temp_mgr.get_working_dir().string();
 
 	for (const std::string &arg : nvcc_opts.nvcc_args)
@@ -141,16 +141,22 @@ bool sf_nvcc::resume_nvcc(const std::vector<fs::path> &ptx_paths,
 
 	std::string c_cpp_args, nvcc_args;
 	std::vector<std::string> cu_files = nvcc_opts.input_files;
+	std::vector<std::string> arch_args;
 
 	for (size_t i = 0; i < nvcc_opts.nvcc_args.size(); i++) {
 		const std::string &arg = nvcc_opts.nvcc_args[i];
 		if (arg.ends_with(".cpp")) {
 			c_cpp_args += arg + " ";
-		} else if (arg == "--generate-code") {
-			i++; // Skip arch specification
+		} else if (arg == "--generate-code" || arg == "-gencode") {
+			arch_args.push_back(nvcc_opts.nvcc_args[++i]);
 		} else {
 			nvcc_args += arg + " ";
 		}
+	}
+
+	std::string gencode;
+	for (const std::string &s : arch_args) {
+		gencode += "-gencode " + s + " ";
 	}
 
 	// compile .cu files for HOST functions only (no device code)
@@ -161,8 +167,8 @@ bool sf_nvcc::resume_nvcc(const std::vector<fs::path> &ptx_paths,
 			(fs::path(cu_file).stem().string() + "_host.o");
 
 		std::string cu_compile_cmd =
-			"nvcc -Wno-deprecated-gpu-targets --compile " +
-			cu_file + " -o " + cu_obj_path.string();
+			"nvcc -Wno-deprecated-gpu-targets -rdc=true -lcudart -x cu -c " +
+			cu_file + " " + gencode + " -o " + cu_obj_path.string();
 
 		if (sf_opts.enable_verbose) {
 			std::cout << ACOL(ACOL_Y, ACOL_BF)
@@ -200,11 +206,15 @@ bool sf_nvcc::resume_nvcc(const std::vector<fs::path> &ptx_paths,
 			arch_flag = " -arch=sm_" + compute_ver;
 		}
 
+		if (arch_flag.empty() && arch_args.size() == 1) {
+			arch_flag = "-gencode " + arch_args[0];
+		}
+
 		fs::path ptx_obj_path = temp_mgr.get_working_dir() /
 					(ptx_path.stem().string() + ".o");
 
 		std::string ptx_compile_cmd =
-			"nvcc -Wno-deprecated-gpu-targets --device-c" +
+			"nvcc -Wno-deprecated-gpu-targets --device-c -rdc=true -lcudart --keep-device-functions " +
 			arch_flag + " " + ptx_path.string() + " -o " +
 			ptx_obj_path.string();
 
@@ -225,7 +235,10 @@ bool sf_nvcc::resume_nvcc(const std::vector<fs::path> &ptx_paths,
 
 	// Device link PTX objects + libsafecuda.so
 	fs::path dlink_path = temp_mgr.get_working_dir() / "kernels_dlink.o";
-	std::string dlink_command = "nvcc -dlink ";
+	std::string dlink_command =
+		"nvcc -dlink -rdc=true -lcudart --keep-device-functions " +
+		gencode;
+
 	for (const auto &obj : ptx_obj_paths) {
 		dlink_command += obj + " ";
 	}
@@ -245,7 +258,9 @@ bool sf_nvcc::resume_nvcc(const std::vector<fs::path> &ptx_paths,
 	temp_mgr.add_file(dlink_path);
 
 	// combine everything
-	std::string final_command = "nvcc " + nvcc_args + " " + c_cpp_args;
+	std::string final_command =
+		"nvcc -rdc=true -lcudart --keep-device-functions " + gencode +
+		nvcc_args + " " + c_cpp_args;
 
 	for (const auto &obj : cu_obj_paths) {
 		final_command += obj + " ";

@@ -28,12 +28,12 @@
 #include <cstdlib>
 #include <cstring>
 #include <dlfcn.h>
+#include <iostream>
 #include <stdexcept>
 
 safecuda::memory::AllocationTable *h_table = nullptr;
 
-extern __constant__ safecuda::memory::AllocationTable *d_table;
-extern __device__ bool FREED_MEM_DEV;
+extern "C" __constant__ safecuda::memory::AllocationTable *d_table;
 
 namespace safecuda
 {
@@ -69,6 +69,7 @@ static std::uint32_t get_table_size_from_env()
 
 void init_safecuda()
 {
+	std::cerr << "init_sf_cuda\n\n";
 	real_cudaMalloc =
 		reinterpret_cast<cudaMalloc_t>(dlsym(RTLD_NEXT, "cudaMalloc"));
 	real_cudaMallocManaged = reinterpret_cast<cudaMallocManaged_t>(
@@ -101,7 +102,7 @@ void init_safecuda()
 	cudaMemcpy(&d_table_ptr->entries, &d_entries_ptr,
 		   sizeof(memory::Entry *), cudaMemcpyHostToDevice);
 
-	const bool freed = std::getenv("SAFECUDA_THROW_FREED_MEMORY");
+	const bool freed = std::getenv("SAFECUDA_THROW_FREED_MEMORY") != NULL;
 	cudaMemcpyToSymbol(&FREED_MEM_DEV, &freed, sizeof(bool));
 
 	cudaError_t err = set_device_table_pointer(d_table_ptr);
@@ -110,6 +111,7 @@ void init_safecuda()
 			"[SafeCUDA] Failed to set device table pointer: %s\n",
 			cudaGetErrorString(err));
 	}
+	safecuda::real_cudaDeviceSynchronize();
 }
 
 void shutdown_safecuda()
@@ -207,6 +209,7 @@ extern "C" cudaError_t cudaMalloc(void **dev_ptr, std::size_t size)
 	entry->epochs = 0;
 	safecuda::memory::Metadata meta = {0x5AFE, {0}, entry};
 	cudaMemcpy(base, &meta, 16, cudaMemcpyHostToDevice);
+	safecuda::real_cudaDeviceSynchronize();
 	*dev_ptr = user_ptr;
 	return cudaSuccess;
 }
@@ -238,6 +241,7 @@ extern "C" cudaError_t cudaMallocManaged(void **dev_ptr, std::size_t size,
 	entry->epochs = 0;
 	safecuda::memory::Metadata meta = {0x5AFE, {0}, entry};
 	cudaMemcpy(base, &meta, 16, cudaMemcpyHostToDevice);
+	safecuda::real_cudaDeviceSynchronize();
 	*dev_ptr = user_ptr;
 	return cudaSuccess;
 }

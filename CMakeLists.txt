@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 
 set(CMAKE_CUDA_COMPILER "/usr/local/cuda/bin/nvcc")
-set(CMAKE_CUDA_ARCHITECTURES 52 60 61 75 86)
+set(CMAKE_CUDA_ARCHITECTURES 75)
 
 set(PROJECT_VERSION_MAJOR 0)
 set(PROJECT_VERSION_MINOR 9)
@@ -22,12 +22,12 @@ include_directories(include)
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Building in Debug mode")
     set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Wall -Wextra")
-    set(CMAKE_CUDA_FLAGS_DEBUG "-g -G -O0")
+    set(CMAKE_CUDA_FLAGS_DEBUG "-g -G -O0 -rdc=true")
     add_definitions(-DDEBUG)
 elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
     message(STATUS "Building in Release mode")
     set(CMAKE_CXX_FLAGS_RELEASE "-O3")
-    set(CMAKE_CUDA_FLAGS_RELEASE "-O3")
+    set(CMAKE_CUDA_FLAGS_RELEASE "-O3 -rdc=true")
     add_definitions(-DNDEBUG)
 endif ()
 
@@ -67,7 +67,6 @@ target_compile_definitions(safecuda PRIVATE
 add_library(safecuda_device STATIC
         src/safecache.cu
 )
-
 
 target_link_libraries(safecuda_device
         CUDA::cudart_static
