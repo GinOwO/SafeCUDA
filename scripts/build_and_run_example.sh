@@ -52,7 +52,7 @@ echo "-----------------------------------------------"
 
 echo ""
 echo "Running NVCC ver (should not catch the OOB):"
-./example_nvcc
+time ./example_nvcc
 
 echo "-----------------------------------------------"
 echo ""
@@ -60,4 +60,4 @@ echo "Running SF-NVCC ver (should throw an exception):"
 export LD_PRELOAD=cmake-build-Release/libsafecuda.so:$LD_PRELOAD
 export LD_LIBRARY_PATH=cmake-build-Release/:$LD_LIBRARY_PATH
 export SAFECUDA_THROW_OOB=1
-./example
+time ./example
