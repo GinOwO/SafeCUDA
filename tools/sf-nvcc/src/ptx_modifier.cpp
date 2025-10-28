@@ -7,10 +7,14 @@
  *
  * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
  * @date 2025-08-12
- * @version 1.0.0
+ * @version 1.1.1
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  *
  * Change Log:
+ * - 2025-10-28: Used -dryrun to properly implement ptx injections, inlining ptx
+ *		code directly
+ * - 2025-10-23: Implemented __bounds_check_safecuda and
+ *		__bounds_check_safecuda_no_trap for fail fast
  * - 2025-09-23: Now inserts bounds_check directly into every ptx file
  * - 2025-09-22: Initial Implementation
  * - 2025-08-12: Initial File
@@ -19,6 +23,7 @@
 #include "ptx_modifier.h"
 
 #include "pattern_matcher.h"
+#include "ptx_data.h"
 
 #include <fstream>
 #include <iostream>
@@ -49,12 +54,18 @@ extractAddressRegister(const std::vector<std::string> &lexemes)
  * @brief Generate bounds check call instruction with proper indentation
  * @param address_reg Register containing memory address to check
  * @param indentation Whitespace string to match original formatting
+ * @param fail_fast Boolean indicating whether to trap kernel or not
  * @return Formatted PTX bounds check instruction
  */
 static std::string generateBoundsCheckCall(const std::string &address_reg,
-					   const std::string &indentation)
+					   const std::string &indentation,
+					   const bool fail_fast)
 {
-	return indentation + "call bounds_check, (" + address_reg + ");";
+	if (fail_fast)
+		return indentation + "call __bounds_check_safecuda, (" +
+		       address_reg + ");";
+	return indentation + "call __bounds_check_safecuda_no_trap, (" +
+	       address_reg + ");";
 }
 
 /**
@@ -137,6 +148,7 @@ static bool createBackupFile(const fs::path &ptx_path,
  * @param ptx_path Path to PTX file to modify
  * @param instructions Vector of identified global memory instructions
  * @param opts SafeCUDA options for logging and debugging
+ * @param result Stores the modification result
  * @return True if instrumentation successful, false otherwise
  */
 static bool
@@ -148,6 +160,13 @@ instrumentPTXFile(const fs::path &ptx_path,
 	std::ifstream input_file(ptx_path);
 	if (!input_file.is_open()) {
 		return false;
+	}
+
+	std::string extern_line;
+	if (opts.fail_fast) {
+		extern_line = trap_ver;
+	} else {
+		extern_line = no_trap_ver;
 	}
 
 	std::vector<std::string> file_lines;
@@ -164,31 +183,42 @@ instrumentPTXFile(const fs::path &ptx_path,
 
 	size_t instruction_index = 0;
 	size_t instrumented_count = 0;
+	int header = 0;
 
 	for (size_t line_num = 1; line_num <= file_lines.size(); ++line_num) {
 		const std::string &current_line = file_lines[line_num - 1];
 
 		if (current_line.starts_with(".address_size")) {
 			output_file << current_line << "\n\n"
-				    << R"ptx(.func bounds_check(
-	.param .b64 bounds_check_param_0
-)
-{
-	ret;
-}
-)ptx" << "\n\n";
+				    << extern_line << "\n\n";
+			continue;
+		}
+
+		if (current_line.contains(".entry")) {
+			output_file << current_line
+				    << ".param .u64 d_table_param,\n";
+			header = 1;
+			continue;
+		}
+
+		if (!(instruction_index < instructions.size() &&
+		      instructions[instruction_index].line_number ==
+			      static_cast<int64_t>(line_num))) {
+			if (header == 1 && current_line.starts_with('{')) {
+				output_file
+					<< current_line
+					<< "\n.reg .b64 %rd_table;\nld.param.u64 %rd_table,"
+					   " [d_table_param];\nst.global.u64 [d_table], %rd_table;\n";
+				header = -1;
+				continue;
+			}
+
+			output_file << current_line << "\n";
 			continue;
 		}
 
 		bool needs_instrumentation = false;
 		std::string bounds_check_call;
-
-		if (!(instruction_index < instructions.size() &&
-		      instructions[instruction_index].line_number ==
-			      static_cast<int64_t>(line_num))) {
-			output_file << current_line << "\n";
-			continue;
-		}
 
 		const auto &instr = instructions[instruction_index];
 		std::string address_reg = extractAddressRegister(instr.lexemes);
@@ -196,7 +226,7 @@ instrumentPTXFile(const fs::path &ptx_path,
 		if (!address_reg.empty()) {
 			std::string indentation = getIndentation(current_line);
 			bounds_check_call = generateBoundsCheckCall(
-				address_reg, indentation);
+				address_reg, indentation, opts.fail_fast);
 			needs_instrumentation = true;
 			instrumented_count++;
 
@@ -236,7 +266,7 @@ instrumentPTXFile(const fs::path &ptx_path,
 
 sf_nvcc::PtxModificationResult
 sf_nvcc::insert_bounds_check(const fs::path &ptx_path,
-			     const sf_nvcc::SafeCudaOptions &sf_opts)
+			     const SafeCudaOptions &sf_opts)
 {
 	PtxModificationResult result;
 	const auto start = std::chrono::steady_clock::now();
@@ -305,9 +335,8 @@ sf_nvcc::modify_ptx(const fs::path &ptx_path, const SafeCudaOptions &sf_opts)
 	PtxModificationResult result;
 	result.success = true;
 	result.modified_ptx_path = ptx_path.string();
-	std::cout << std::endl;
 	if (sf_opts.enable_verbose)
-		std::cout << ptx_path << '\n';
+		std::cout << std::endl << ptx_path << '\n';
 	if (sf_opts.enable_bounds_check) {
 		const PtxModificationResult current_res =
 			insert_bounds_check(result.modified_ptx_path, sf_opts);

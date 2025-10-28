@@ -1,33 +1,58 @@
 /**
  * @file safecuda.h
- * @brief SafeCUDA host-side implementation (placeholder)
+ * @brief SafeCUDA expose for real CUDA functions
  * 
- * Header file for safecuda.cpp
+ * Header file containing expose to the real cuda functions
  * 
- * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
+ * @author Navin <navinkumar.ao2022@vitstudent.ac.in>
  * @date 2025-07-05
- * @version 0.0.1
+ * @version 0.1.0
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  * 
  * Change Log:
- * - 2025-07-05: Initial implementation
+ * - 2025-10-23: Added support for cudaGetLastError
+ * - 2025-10-22: Removed redundancies, fixed styling added cudaMalloc
  * - 2025-10-18: Added basic lifecycle components to the header
+ * - 2025-07-05: Initial implementation
  */
-#include "safecache.cuh"
+
 #ifndef SAFECUDA_H
 #define SAFECUDA_H
 
-namespace safecuda{
-	using cudaMallocManaged_t = cudaError_t (*)(void **, size_t, unsigned int);
-    	using cudaFree_t = cudaError_t (*)(void *);
+#include <cuda_runtime.h>
+#include <cuda.h>
+#include <cstddef>
 
-    	extern cudaMallocManaged_t real_cudaMallocManaged;
-    	extern cudaFree_t real_cudaFree;
+namespace safecuda
+{
 
-	void init_symbols() __attribute__((constructor));
-	void shutdown() __attribute__((destructor));
+using cudaMalloc_t = cudaError_t (*)(void **, std::size_t);
+using cudaMallocManaged_t = cudaError_t (*)(void **, std::size_t, unsigned int);
+using cudaFree_t = cudaError_t (*)(void *);
+using cudaDeviceSynchronize_t = cudaError_t (*)();
+using cudaGetLastError_t = cudaError_t (*)();
+using cudaConfigureCall_t = cudaError_t (*)(dim3, dim3, size_t, cudaStream_t);
+using cudaSetupArgument_t = cudaError_t (*)(const void *, size_t, size_t);
+using cudaLaunch_t = cudaError_t (*)(const void *);
+using cuLaunchKernel_t = CUresult (*)(CUfunction, unsigned int, unsigned int,
+				      unsigned int, unsigned int, unsigned int,
+				      unsigned int, unsigned int, CUstream,
+				      void **, void **);
+using cudaLaunchKernel_t = cudaError_t (*)(const void *func, dim3 gridDim,
+					   dim3 blockDim, void **args,
+					   size_t sharedMem,
+					   cudaStream_t stream);
 
-	extern __managed__ safecuda::cache::DynamicCache* dynamic_cache;
+extern cudaMalloc_t real_cudaMalloc;
+extern cudaMallocManaged_t real_cudaMallocManaged;
+extern cudaFree_t real_cudaFree;
+extern cudaDeviceSynchronize_t real_cudaDeviceSynchronize;
+extern cudaGetLastError_t real_cudaGetLastError;
+extern cudaLaunchKernel_t real_cudaLaunchKernel;
+
+void init_safecuda();
+void shutdown_safecuda();
+
 }
 
 #endif // SAFECUDA_H

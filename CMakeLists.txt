@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 
 set(CMAKE_CUDA_COMPILER "/usr/local/cuda/bin/nvcc")
-set(CMAKE_CUDA_ARCHITECTURES 52 60 61 75 86)
+set(CMAKE_CUDA_ARCHITECTURES 75)
 
 set(PROJECT_VERSION_MAJOR 0)
-set(PROJECT_VERSION_MINOR 1)
+set(PROJECT_VERSION_MINOR 9)
 set(PROJECT_VERSION_PATCH 0)
 set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 
@@ -22,12 +22,13 @@ include_directories(include)
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Building in Debug mode")
     set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Wall -Wextra")
-    set(CMAKE_CUDA_FLAGS_DEBUG "-g -G -O0")
+    set(CMAKE_CUDA_FLAGS_DEBUG "-g -G -O0 -rdc=true")
     add_definitions(-DDEBUG)
 elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
     message(STATUS "Building in Release mode")
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
-    set(CMAKE_CUDA_FLAGS_RELEASE "-O3 -DNDEBUG")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+    set(CMAKE_CUDA_FLAGS_RELEASE "-O3 -rdc=true")
+    add_definitions(-DNDEBUG)
 endif ()
 
 option(BUILD_SAFECUDA_TOOLS "Build SafeCUDA tools (sf-nvcc)" ON)
@@ -36,8 +37,6 @@ option(BUILD_SAFECUDA_EXAMPLES "Build SafeCUDA examples" ON)
 # Build libsafecuda ------------------------------------------------------------
 add_library(safecuda SHARED
         src/safecuda.cpp
-        src/safecuda.cu
-        src/memtable.cpp
         src/safecache.cu
 )
 

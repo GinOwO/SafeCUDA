@@ -1,119 +1,262 @@
 /**
  * @file safecuda.cpp
- * @brief SafeCUDA host-side implementation (placeholder)
+ * @brief SafeCUDA expose for real CUDA functions
  * 
- * This file will contain the main SafeCUDA host-side implementation
- * including memory allocation interception and metadata management.
+ * This file contains the expose for real CUDA functions
  * 
- * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
+ * @author Navin <navinkumar.ao2022@vitstudent.ac.in>
  * @date 2025-07-05
- * @version 0.0.1
+ * @version 0.1.0
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  * 
  * Change Log:
- * - 2025-07-05: Initial implementation
+ * - 2025-10-29: Moved a lot of stuff, manually passing d_table as arg to 2
+ *		param kernels now, ptx side is generic for n param kernels but
+ *		not sure of how to make it for n length in host side
+ * - 2025-10-23: Reworked table and merged files, added cudaMalloc,
+ *		cudaDeviceSynchronize, cudaGetLastError. Added exceptions for
+ *		cudaDeviceSynchronize and cudaGetLastError
+ * - 2025-10-22: Removed redundancies and fixed styling
  * - 2025-10-18: Intercepted cudaMallocManaged and cudaFree.
+ * - 2025-07-05: Initial implementation
  */
-#include <cuda_runtime_api.h>
-#include <dlfcn.h>
-#include <iostream>
-#include <mutex>
 
 #include "safecuda.h"
-#include "memtable.h"
+
 #include "safecache.cuh"
 
-extern "C" cudaError_t cudaMallocManaged(void **devPtr, size_t size, unsigned int flags) {
+#include <cuda_runtime.h>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <dlfcn.h>
+#include <stdexcept>
 
-    if (!safecuda::real_cudaMallocManaged) {
-		std::cerr << "[SafeCUDA] Failed to find original cudaMallocManaged: " << dlerror() << std::endl;
-    }
+static safecuda::memory::AllocationTable *h_table = nullptr;
+static safecuda::memory::AllocationTable *d_table_ptr = nullptr;
 
-	std::cerr << "[SafeCUDA] Intercepted cudaMallocManaged(" << size << " bytes)" << std::endl;
+namespace safecuda
+{
+constexpr uint32_t TABLE_ENTRIES = 1024;
 
-	size_t newSize = size + sizeof(safecuda::memtable::Header);
-	void *basePtr = nullptr;
+cudaMalloc_t real_cudaMalloc = nullptr;
+cudaMallocManaged_t real_cudaMallocManaged = nullptr;
+cudaFree_t real_cudaFree = nullptr;
+cudaDeviceSynchronize_t real_cudaDeviceSynchronize = nullptr;
+cudaGetLastError_t real_cudaGetLastError = nullptr;
+cudaLaunchKernel_t real_cudaLaunchKernel = nullptr;
 
-	cudaError_t result = safecuda::real_cudaMallocManaged(&basePtr, newSize, flags);
-
-	if (result == cudaSuccess)
-		std::cerr << "[SafeCUDA] Allocation succeeded.\n";
-	else
-		std::cerr << "[SafeCUDA] Allocation failed: " << cudaGetErrorString(result) << "\n";
-
-	*devPtr = safecuda::memtable::init_header(basePtr);
-
-	safecuda::cache::CacheEntry* entry_ptr = safecuda::dynamic_cache->push(reinterpret_cast<std::uintptr_t>(*devPtr), static_cast<std::uint32_t>(size), 0, 0);
-
-	bool res = safecuda::dynamic_cache->search(reinterpret_cast<uintptr_t>(*devPtr));
-	if(res == true)
-		std::cerr << "[SafeCUDA] Found " << reinterpret_cast<uintptr_t>(*devPtr) << " entry in memory.\n";
-	else
-		std::cerr << "[SafeCUDA] entry not found in memory.\n";
-
-	safecuda::memtable::Header *header = reinterpret_cast<safecuda::memtable::Header*>(basePtr);
-	header->entry = entry_ptr;
-
-	std::cerr << "entry-start_addr - " << reinterpret_cast<uintptr_t>(header->entry->start_addr) << std::endl;
-	std::cerr << "entry-size - " << header->entry->block_size << std::endl;
-	std::cerr << "magic_word - " << header->magic_word << std::endl;
-
-	return result;
+static void sync_table_to_device()
+{
+	size_t entry_bytes = TABLE_ENTRIES * sizeof(memory::Entry);
+	size_t table_bytes = sizeof(memory::AllocationTable) + entry_bytes;
+	cudaMemcpy(d_table_ptr, h_table, table_bytes, cudaMemcpyHostToDevice);
 }
 
-extern "C" cudaError_t cudaFree(void* devPtr) {
+void init_safecuda()
+{
+	real_cudaMalloc =
+		reinterpret_cast<cudaMalloc_t>(dlsym(RTLD_NEXT, "cudaMalloc"));
+	real_cudaMallocManaged = reinterpret_cast<cudaMallocManaged_t>(
+		dlsym(RTLD_NEXT, "cudaMallocManaged"));
+	real_cudaFree =
+		reinterpret_cast<cudaFree_t>(dlsym(RTLD_NEXT, "cudaFree"));
+	real_cudaDeviceSynchronize = reinterpret_cast<cudaDeviceSynchronize_t>(
+		dlsym(RTLD_NEXT, "cudaDeviceSynchronize"));
+	real_cudaGetLastError = reinterpret_cast<cudaGetLastError_t>(
+		dlsym(RTLD_NEXT, "cudaGetLastError"));
+	real_cudaLaunchKernel = reinterpret_cast<cudaLaunchKernel_t>(
+		dlsym(RTLD_NEXT, "cudaLaunchKernel"));
 
-    if (!safecuda::real_cudaFree) {
-		std::cerr << "[SafeCUDA] Failed to find original cudaFree: " << dlerror() << std::endl;
-    }
+	size_t entry_bytes = TABLE_ENTRIES * sizeof(memory::Entry);
+	size_t table_bytes = sizeof(memory::AllocationTable) + entry_bytes;
+	cudaHostAlloc(&h_table, table_bytes, cudaHostAllocMapped);
 
-	std::cerr << "[SafeCUDA] Intercepted cudaFree" << "\n";
-	void* todelete = reinterpret_cast<void*>(reinterpret_cast<std::uint8_t*>(devPtr) - sizeof(safecuda::memtable::Header));
-	safecuda::memtable::delete_entry(todelete);
+	if (!h_table) {
+		printf("Failed to allocate to h_table\n");
+		exit(1);
+	}
 
-	cudaError_t result = safecuda::real_cudaFree(todelete);
-	if (result == cudaSuccess)
-		std::cerr << "[SafeCUDA] DeAllocation succeeded.\n";
-	else
-		std::cerr << "[SafeCUDA] DeAllocation failed: " << cudaGetErrorString(result) << "\n";
+	h_table->entries = reinterpret_cast<memory::Entry *>(h_table + 1);
+	h_table->count = 1;
+	h_table->capacity = TABLE_ENTRIES;
+	std::memset(h_table->entries, 0, entry_bytes);
+	void *ptr = nullptr;
+	real_cudaMalloc(&ptr, table_bytes);
+	d_table_ptr = static_cast<memory::AllocationTable *>(ptr);
+	cudaMemcpy(d_table_ptr, h_table, table_bytes, cudaMemcpyHostToDevice);
 
-	return result;
+	cudaDeviceSynchronize();
 }
 
-namespace safecuda{
-	cudaMallocManaged_t real_cudaMallocManaged = nullptr;
-	cudaFree_t real_cudaFree = nullptr;
-	__managed__ safecuda::cache::DynamicCache* dynamic_cache = nullptr;
+void shutdown_safecuda()
+{
+	if (d_table_ptr)
+		cudaFree(d_table_ptr);
+	if (h_table)
+		cudaFreeHost(h_table);
+	d_table_ptr = nullptr;
+	h_table = nullptr;
+}
 
-	void init_symbols() {
-		real_cudaMallocManaged = (cudaMallocManaged_t)dlsym(RTLD_NEXT, "cudaMallocManaged");
-    	real_cudaFree = (cudaFree_t)dlsym(RTLD_NEXT, "cudaFree");
-
-    	if (!real_cudaMallocManaged || !real_cudaFree){
-			std::cerr << "[SafeCUDA] Failed to resolve CUDA symbols.\n";
-			return;
-		}
-
-		cudaError_t result = real_cudaMallocManaged(reinterpret_cast<void**>(&dynamic_cache), sizeof(safecuda::cache::DynamicCache), cudaMemAttachGlobal);
-		if (result == cudaSuccess)
-			std::cerr << "[SafeCUDA] d_cache Allocation succeeded.\n";
-		else
-			std::cerr << "[SafeCUDA] d_cache DeAllocation failed: " << cudaGetErrorString(result) << "\n";
-		new (dynamic_cache) safecuda::cache::DynamicCache(1024);
-
+void check_and_report_errors()
+{
+	if (h_table->entries[0].flags == memory::NO_ERROR)
 		return;
+	const std::uintptr_t addr = h_table->entries[0].start_addr;
+	std::uint32_t code = h_table->entries[0].flags;
+
+	if (code & memory::ERROR_OUT_OF_BOUNDS) {
+		char addr_buf[32];
+		std::snprintf(addr_buf, sizeof(addr_buf), "0x%lx", addr);
+		const std::string error_msg =
+			std::string("[SafeCUDA] Out-of-bounds access at ") +
+			addr_buf + " (code=0x" + std::to_string(code) + ")";
+
+		std::fprintf(stderr, "%s\n", error_msg.c_str());
+		throw std::runtime_error(error_msg);
 	}
 
-	void shutdown() {
-		dynamic_cache->~DynamicCache();
-		cudaError_t result = real_cudaFree(dynamic_cache);
-		if (result == cudaSuccess)
-			std::cerr << "[SafeCUDA] d_cache DeAllocation succeeded.\n";
-		else
-			std::cerr << "[SafeCUDA] d_cache DeAllocation failed: " << cudaGetErrorString(result) << "\n";
+	if (code & memory::ERROR_FREED_MEMORY) {
+		char addr_buf[32];
+		std::snprintf(addr_buf, sizeof(addr_buf), "0x%lx", addr);
+		const std::string error_msg =
+			std::string("[SafeCUDA] Use-after-free at ") +
+			addr_buf + " (code=0x" + std::to_string(code) + ")";
 
-		dynamic_cache = nullptr;
-
-		return;
+		std::fprintf(stderr, "%s\n", error_msg.c_str());
+		throw std::runtime_error(error_msg);
 	}
+
+	if (code & memory::ERROR_INVALID_POINTER) {
+		char addr_buf[32];
+		std::snprintf(addr_buf, sizeof(addr_buf), "0x%lx", addr);
+		const std::string error_msg =
+			std::string("[SafeCUDA] Invalid pointer access at ") +
+			addr_buf + " (code=0x" + std::to_string(code) + ")";
+
+		std::fprintf(stderr, "%s\n", error_msg.c_str());
+		throw std::runtime_error(error_msg);
+	}
+	h_table->entries[0].flags = 0;
+	h_table->entries[0].start_addr = 0;
+}
+
+}
+
+extern "C" cudaError_t cudaMalloc(void **dev_ptr, std::size_t size)
+{
+	if (!safecuda::real_cudaMalloc)
+		safecuda::init_safecuda();
+	void *base = nullptr;
+	cudaError_t err = safecuda::real_cudaMalloc(&base, size + 16);
+	if (err != cudaSuccess) {
+		std::fprintf(stderr, "[SafeCUDA] cudaMalloc failed: %s\n",
+			     cudaGetErrorString(err));
+		return err;
+	}
+	if (h_table->count >= 1024) {
+		safecuda::real_cudaFree(base);
+		std::fprintf(stderr, "[SafeCUDA] Allocation table full\n");
+		return cudaErrorMemoryAllocation;
+	}
+	void *user_ptr = static_cast<char *>(base) + 16;
+	safecuda::memory::Entry *entry = &h_table->entries[h_table->count++];
+	entry->start_addr = reinterpret_cast<std::uintptr_t>(user_ptr);
+	entry->block_size = size;
+	entry->flags = safecuda::memory::NO_ERROR;
+	entry->epochs = 0;
+	safecuda::memory::Metadata meta = {0x5AFE, {0}, entry};
+	cudaMemcpy(base, &meta, 16, cudaMemcpyHostToDevice);
+	safecuda::sync_table_to_device();
+	*dev_ptr = user_ptr;
+	return cudaSuccess;
+}
+
+extern "C" cudaError_t cudaMallocManaged(void **dev_ptr, std::size_t size,
+					 unsigned int flags)
+{
+	if (!safecuda::real_cudaMallocManaged)
+		safecuda::init_safecuda();
+	void *base = nullptr;
+	cudaError_t err =
+		safecuda::real_cudaMallocManaged(&base, size + 16, flags);
+	if (err != cudaSuccess) {
+		std::fprintf(stderr,
+			     "[SafeCUDA] cudaMallocManaged failed: %s\n",
+			     cudaGetErrorString(err));
+		return err;
+	}
+	if (h_table->count >= 1024) {
+		safecuda::real_cudaFree(base);
+		std::fprintf(stderr, "[SafeCUDA] Allocation table full\n");
+		return cudaErrorMemoryAllocation;
+	}
+	void *user_ptr = static_cast<std::int8_t *>(base) + 16;
+	safecuda::memory::Entry *entry = &h_table->entries[h_table->count++];
+	entry->start_addr = reinterpret_cast<std::uintptr_t>(user_ptr);
+	entry->block_size = size;
+	entry->flags = safecuda::memory::NO_ERROR;
+	entry->epochs = 0;
+	safecuda::memory::Metadata meta = {0x5AFE, {0}, entry};
+	cudaMemcpy(base, &meta, 16, cudaMemcpyHostToDevice);
+	safecuda::sync_table_to_device();
+	*dev_ptr = user_ptr;
+	return cudaSuccess;
+}
+
+extern "C" cudaError_t cudaFree(void *ptr)
+{
+	if (!ptr)
+		return cudaSuccess;
+
+	void *base = static_cast<std::int8_t *>(ptr) - 16;
+	safecuda::memory::Metadata meta{};
+	cudaMemcpy(&meta, base, 16, cudaMemcpyDeviceToHost);
+	if (meta.magic == 0x5AFE && meta.entry)
+		meta.entry->flags |= safecuda::memory::ERROR_FREED_MEMORY;
+	safecuda::sync_table_to_device();
+	return safecuda::real_cudaFree(base);
+}
+
+extern "C" cudaError_t cudaDeviceSynchronize()
+{
+	if (!safecuda::real_cudaDeviceSynchronize)
+		safecuda::init_safecuda();
+	const cudaError_t err = safecuda::real_cudaDeviceSynchronize();
+	safecuda::check_and_report_errors();
+	return err;
+}
+
+extern "C" cudaError_t cudaGetLastError()
+{
+	if (!safecuda::real_cudaGetLastError)
+		safecuda::init_safecuda();
+	safecuda::check_and_report_errors();
+	return safecuda::real_cudaGetLastError();
+}
+
+extern "C" cudaError_t cudaLaunchKernel(const void *func, dim3 gridDim,
+					dim3 blockDim, void **args,
+					size_t sharedMem, cudaStream_t stream)
+{
+	if (!safecuda::real_cudaLaunchKernel)
+		safecuda::init_safecuda();
+
+	int numParams = 7;
+	size_t size = (numParams + 1) * sizeof(void *);
+
+	void **newParams = (void **)alloca(size);
+	newParams[0] = &d_table_ptr;
+	newParams[1] = args[0];
+	newParams[2] = args[1];
+	newParams[3] = args[2];
+	newParams[4] = args[3];
+	newParams[5] = args[4];
+	newParams[6] = args[5];
+	newParams[numParams] = nullptr;
+
+	return safecuda::real_cudaLaunchKernel(func, gridDim, blockDim,
+					       newParams, sharedMem, stream);
 }

@@ -11,6 +11,10 @@
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  *
  * Change Log:
+ * Change Log:
+ * - 2025-10-28: Refactored to use nvcc -dryrun command orchestration
+ * - 2025-10-23: Integrated with libsafecuda_device.a for compilation,
+ *               modified functionality of fail fast
  * - 2025-09-23: Added support for resuming compilation of ptx with nvcc
  * - 2025-09-22: Added support for resuming compilation of modified ptx files
  * - 2025-08-13: Initial Implementation
@@ -18,12 +22,13 @@
  */
 
 #include "nvcc_wrapper.h"
-
-#include <cstdlib>
-#include <ranges>
+#include <array>
+#include <cstdio>
+#include <filesystem>
 #include <iostream>
-#include <unordered_set>
-#include <fstream>
+#include <memory>
+#include <regex>
+#include <sstream>
 
 namespace sf_nvcc = safecuda::tools::sf_nvcc;
 namespace fs = std::filesystem;
@@ -48,13 +53,15 @@ inline fs::path sf_nvcc::TemporaryFileManager::get_working_dir() const noexcept
 	return this->dir_path;
 }
 
-std::vector<fs::path> sf_nvcc::TemporaryFileManager::filter_ptx_paths() const noexcept {
-    std::vector<fs::path> result;
-    for (const auto& p : temp_files) {
-        if (p.extension() == ".ptx")
-            result.push_back(p);
-    }
-    return result;
+std::vector<fs::path>
+sf_nvcc::TemporaryFileManager::filter_ptx_paths() const noexcept
+{
+	std::vector<fs::path> result;
+	for (const auto &p : temp_files) {
+		if (p.extension() == ".ptx")
+			result.push_back(p);
+	}
+	return result;
 }
 
 std::vector<fs::path>
@@ -68,182 +75,286 @@ void sf_nvcc::TemporaryFileManager::add_file(const fs::path &path) noexcept
 	temp_files.emplace_back(path);
 }
 
-void sf_nvcc::generate_intermediate(const NvccOptions &nvcc_opts,
-				    const SafeCudaOptions &sf_opts,
-				    TemporaryFileManager &temp_mgr)
+/**
+ * @brief Check if a string is an environment variable assignment
+ *
+ * Variable assignments have format: VARIABLE_NAME=value
+ * Commands typically start with quotes, slashes, or executable names
+ *
+ * @param str String to check
+ * @return true if string is a variable assignment
+ */
+static bool is_variable_assignment(const std::string &str)
 {
-	static const std::unordered_set<std::string> extensions{
-		".ii", ".c", ".ptx", ".gpu", ".cubin"};
+	if (str.empty())
+		return false;
 
-	std::string command =
-		"nvcc -Wno-deprecated-gpu-targets --keep -dc -rdc=true --keep-dir=" +
-		temp_mgr.get_working_dir().string();
+	size_t equals_pos = str.find('=');
+	if (equals_pos == std::string::npos || equals_pos == 0)
+		return false;
 
-	for (const std::string &arg : nvcc_opts.nvcc_args)
-		command += " " + arg;
-
-	for (const std::string &arg : nvcc_opts.input_files)
-		command += " " + arg;
-
-	if (sf_opts.enable_verbose) {
-		std::cout << ACOL(ACOL_Y, ACOL_BF)
-			  << "Executing: " << ACOL_RESET() << command << "\n";
-	}
-
-	if (std::system(command.c_str())) {
-		const std::string s{ACOL(
-			ACOL_R, ACOL_DF) "NVCC command failed:\n" ACOL_RESET()};
-		throw std::runtime_error(s + command);
-	}
-
-	for (const auto &p :
-	     fs::directory_iterator(temp_mgr.get_working_dir())) {
-		if (!fs::is_directory(p) &&
-		    extensions.contains(p.path().extension().string())) {
-			temp_mgr.add_file(p);
+	for (size_t i = 0; i < equals_pos; ++i) {
+		char c = str[i];
+		if (!std::isupper(c) && c != '_' && !std::isdigit(c)) {
+			return false;
 		}
+	}
+
+	return true;
+}
+
+namespace
+{
+struct PCloseDeleter {
+	void operator()(FILE *f) const
+	{
+		if (f)
+			pclose(f);
+	}
+};
+
+};
+
+/**
+ * @brief Execute a shell command and capture its output
+ *
+ * @param cmd Command to execute
+ * @return Command output as string
+ * @throws std::runtime_error if command execution fails
+ */
+static std::string exec_command(const std::string &cmd)
+{
+	std::array<char, 128> buffer{};
+	std::string result;
+
+	const std::unique_ptr<FILE, PCloseDeleter> pipe(
+		popen(cmd.c_str(), "r"));
+	if (!pipe) {
+		throw std::runtime_error("popen() failed for command: " + cmd);
+	}
+	while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+		result += buffer.data();
+	}
+	return result;
+}
+
+void sf_nvcc::DryRunParser::parse(const std::string &dryrun_output)
+{
+	std::istringstream iss(dryrun_output);
+	std::string line;
+	size_t cmd_index = 0;
+
+	std::regex ptx_output_regex(R"ptx(-o\s+"?([^"\s]+\.ptx)"?)ptx");
+
+	while (std::getline(iss, line)) {
+		if (line.empty() || !line.starts_with("#$"))
+			continue;
+
+		std::string command = line.substr(3);
+
+		if (command.starts_with("rm "))
+			continue;
+
+		if (is_variable_assignment(command)) {
+			if (command.find("LIBRARIES") != std::string::npos) {
+				command =
+					R"(LIBRARIES="-L/usr/local/cuda/bin/../targets/x86_64-linux/lib/stubs":"-L/usr/local/cuda/bin/../targets/x86_64-linux/lib")";
+			}
+			auto pos = command.find('=');
+			if (pos == std::string::npos)
+				return;
+
+			std::string key = command.substr(0, pos);
+			std::string val = command.substr(pos + 1);
+
+			while (!val.empty() && (val.front() == ' '))
+				val.erase(val.begin());
+			while (!val.empty() && (val.back() == ' '))
+				val.pop_back();
+
+			if (val.size() >= 2 && val.front() == '"' &&
+			    val.back() == '"') {
+				val = val.substr(1, val.size() - 2);
+			}
+
+			setenv(key.c_str(), val.c_str(), 1);
+			continue;
+		}
+
+		commands.push_back(command);
+
+		if (command.find("cicc") != std::string::npos) {
+			std::smatch match;
+			if (std::regex_search(command, match,
+					      ptx_output_regex)) {
+				std::string ptx_path = match[1].str();
+				ptx_files[ptx_path] = ptx_path;
+				ptx_stage_end_index = cmd_index + 1;
+			}
+		}
+
+		cmd_index++;
+	}
+
+	if (ptx_files.empty()) {
+		throw std::runtime_error(
+			"No PTX generation commands found in nvcc -dryrun output");
 	}
 }
 
-bool sf_nvcc::resume_nvcc(const std::vector<fs::path> &ptx_paths,
-			  const SfNvccOptions &sf_nvcc_opts,
-			  TemporaryFileManager &temp_mgr)
+std::vector<std::string> sf_nvcc::DryRunParser::get_pre_ptx_commands() const
 {
-	const SafeCudaOptions &sf_opts = sf_nvcc_opts.safecuda_opts;
-	const NvccOptions &nvcc_opts = sf_nvcc_opts.nvcc_opts;
+	return std::vector<std::string>(commands.begin(),
+					commands.begin() + ptx_stage_end_index);
+}
 
-	if (ptx_paths.empty()) {
-		std::cerr << ACOL(ACOL_R, ACOL_DF)
-			  << "Error: No PTX files provided for compilation"
-			  << ACOL_RESET() << std::endl;
-		return false;
-	}
+std::vector<std::string> sf_nvcc::DryRunParser::get_post_ptx_commands(
+	const std::unordered_map<std::string, std::string> &modified_ptx_map)
+	const
+{
+	std::vector<std::string> post_commands(
+		commands.begin() + ptx_stage_end_index, commands.end());
 
-	std::string c_cpp_args, nvcc_args;
-	std::vector<std::string> cu_files = nvcc_opts.input_files;
-
-	for (size_t i = 0; i < nvcc_opts.nvcc_args.size(); i++) {
-		const std::string &arg = nvcc_opts.nvcc_args[i];
-		if (arg.ends_with(".cpp")) {
-			c_cpp_args += arg + " ";
-		} else if (arg == "--generate-code") {
-			i++; // Skip arch specification
-		} else {
-			nvcc_args += arg + " ";
+	for (auto &cmd : post_commands) {
+		for (const auto &[orig_ptx, modified_ptx] : modified_ptx_map) {
+			size_t pos = 0;
+			while ((pos = cmd.find(orig_ptx, pos)) !=
+			       std::string::npos) {
+				cmd.replace(pos, orig_ptx.length(),
+					    modified_ptx);
+				pos += modified_ptx.length();
+			}
 		}
 	}
 
-	// compile .cu files for HOST functions only (no device code)
-	std::vector<std::string> cu_obj_paths;
-	for (const auto &cu_file : cu_files) {
-		fs::path cu_obj_path =
-			temp_mgr.get_working_dir() /
-			(fs::path(cu_file).stem().string() + "_host.o");
+	return post_commands;
+}
 
-		std::string cu_compile_cmd =
-			"nvcc -Wno-deprecated-gpu-targets --compile " +
-			cu_file + " -o " + cu_obj_path.string();
+sf_nvcc::DryRunParser sf_nvcc::execute_dryrun(const NvccOptions &nvcc_opts,
+					      const SafeCudaOptions &sf_opts)
+{
+	std::string dryrun_cmd = "nvcc -dryrun -lcudart";
 
+	for (const std::string &arg : nvcc_opts.nvcc_args) {
+		dryrun_cmd += " " + arg;
+	}
+
+	if (sf_opts.enable_verbose) {
+		std::cout << ACOL(ACOL_Y, ACOL_BF)
+			  << "Executing dryrun: " << ACOL_RESET() << dryrun_cmd
+			  << "\n";
+	}
+
+	std::string dryrun_output;
+	try {
+		dryrun_output = exec_command(dryrun_cmd + " 2>&1");
+	} catch (const std::exception &e) {
+		throw std::runtime_error(
+			std::string("nvcc -dryrun execution failed: ") +
+			e.what());
+	}
+
+	if (sf_opts.enable_verbose) {
+		std::cout << ACOL(ACOL_C, ACOL_DF) << "Dryrun output:\n"
+			  << ACOL_RESET() << dryrun_output << "\n";
+	}
+
+	DryRunParser parser;
+	parser.parse(dryrun_output);
+
+	if (sf_opts.enable_verbose) {
+		std::cout << ACOL(ACOL_G, ACOL_BF) << "Found "
+			  << parser.ptx_files.size()
+			  << " PTX file(s) to generate" << ACOL_RESET() << "\n";
+		std::cout
+			<< ACOL(ACOL_C, ACOL_DF)
+			<< "Total commands: " << parser.commands.size()
+			<< ", Pre-PTX commands: " << parser.ptx_stage_end_index
+			<< ACOL_RESET() << "\n";
+	}
+
+	return parser;
+}
+
+std::vector<fs::path>
+sf_nvcc::execute_pre_ptx_stage(const DryRunParser &parser,
+			       const SafeCudaOptions &sf_opts,
+			       TemporaryFileManager &temp_mgr)
+{
+	auto pre_ptx_cmds = parser.get_pre_ptx_commands();
+
+	if (sf_opts.enable_verbose) {
+		std::cout << ACOL(ACOL_Y, ACOL_BB) << ACOL(ACOL_K, ACOL_DF)
+			  << "Executing pre-PTX compilation stage ("
+			  << pre_ptx_cmds.size() << " commands)" << ACOL_RESET()
+			  << "\n";
+	}
+
+	for (const auto &cmd : pre_ptx_cmds) {
 		if (sf_opts.enable_verbose) {
-			std::cout << ACOL(ACOL_Y, ACOL_BF)
-				  << "Compiling .cu host code\nExecuting: "
-				  << ACOL_RESET() << cu_compile_cmd << "\n";
+			std::cout << ACOL(ACOL_C, ACOL_DF)
+				  << "Executing: " << ACOL_RESET() << cmd
+				  << "\n";
 		}
 
-		if (std::system(cu_compile_cmd.c_str())) {
+		int ret = std::system(cmd.c_str());
+		if (ret != 0) {
 			throw std::runtime_error(
-				"CU host compilation failed: " +
-				cu_compile_cmd);
+				"Pre-PTX command failed with exit code " +
+				std::to_string(ret) + ": " + cmd);
 		}
-
-		cu_obj_paths.push_back(cu_obj_path.string());
-		temp_mgr.add_file(cu_obj_path);
 	}
 
-	std::vector<std::string> ptx_obj_paths;
-	for (const auto &ptx_path : ptx_paths) {
-		if (!fs::exists(ptx_path)) {
-			std::cerr << ACOL(ACOL_R, ACOL_DF)
-				  << "Error: PTX file not found: "
-				  << ptx_path.string() << ACOL_RESET()
-				  << std::endl;
-			return false;
+	std::vector<fs::path> ptx_paths;
+	for (const auto &[ptx_file, _] : parser.ptx_files) {
+		fs::path ptx_path(ptx_file);
+		if (fs::exists(ptx_path)) {
+			ptx_paths.push_back(ptx_path);
+			temp_mgr.add_file(ptx_path);
+
+			if (sf_opts.enable_verbose) {
+				std::cout << ACOL(ACOL_G, ACOL_BF)
+					  << "Generated PTX: " << ACOL_RESET()
+					  << ptx_path << "\n";
+			}
+		} else {
+			throw std::runtime_error(
+				"Expected PTX file not generated: " + ptx_file);
 		}
+	}
 
-		std::string filename = ptx_path.stem().string();
-		std::string arch_flag;
+	return ptx_paths;
+}
 
-		size_t compute_pos = filename.find("compute_");
-		if (compute_pos != std::string::npos) {
-			std::string compute_ver =
-				filename.substr(compute_pos + 8);
-			arch_flag = " -arch=sm_" + compute_ver;
-		}
+bool sf_nvcc::execute_post_ptx_stage(
+	const std::unordered_map<std::string, std::string> &modified_ptx_map,
+	const DryRunParser &parser, const SafeCudaOptions &sf_opts,
+	const NvccOptions &nvcc_opts)
+{
+	auto post_ptx_cmds = parser.get_post_ptx_commands(modified_ptx_map);
 
-		fs::path ptx_obj_path = temp_mgr.get_working_dir() /
-					(ptx_path.stem().string() + ".o");
+	if (sf_opts.enable_verbose) {
+		std::cout << ACOL(ACOL_Y, ACOL_BB) << ACOL(ACOL_K, ACOL_DF)
+			  << "Executing post-PTX compilation stage ("
+			  << post_ptx_cmds.size() << " commands)"
+			  << ACOL_RESET() << "\n";
+	}
 
-		std::string ptx_compile_cmd =
-			"nvcc -Wno-deprecated-gpu-targets --device-c" +
-			arch_flag + " " + ptx_path.string() + " -o " +
-			ptx_obj_path.string();
+	const std::string op_path{"-o \"" + nvcc_opts.output_path + "\""};
 
+	for (auto &cmd : post_ptx_cmds) {
 		if (sf_opts.enable_verbose) {
-			std::cout << ACOL(ACOL_Y, ACOL_BF)
-				  << "Compiling PTX to object\nExecuting: "
-				  << ACOL_RESET() << ptx_compile_cmd << "\n";
+			std::cout << ACOL(ACOL_C, ACOL_DF)
+				  << "Executing: " << ACOL_RESET() << cmd
+				  << "\n";
 		}
 
-		if (std::system(ptx_compile_cmd.c_str())) {
-			throw std::runtime_error("PTX compilation failed: " +
-						 ptx_compile_cmd);
+		int ret = std::system(cmd.c_str());
+		if (ret != 0) {
+			throw std::runtime_error(
+				"Post-PTX command failed with exit code " +
+				std::to_string(ret) + ": " + cmd);
 		}
-
-		ptx_obj_paths.push_back(ptx_obj_path.string());
-		temp_mgr.add_file(ptx_obj_path);
-	}
-
-	// Device link PTX objects only
-	fs::path dlink_path = temp_mgr.get_working_dir() / "kernels_dlink.o";
-	std::string dlink_command = "nvcc -dlink ";
-	for (const auto &obj : ptx_obj_paths) {
-		dlink_command += obj + " ";
-	}
-	dlink_command += "-o " + dlink_path.string();
-
-	if (sf_opts.enable_verbose) {
-		std::cout << ACOL(ACOL_Y, ACOL_BF)
-			  << "Device linking PTX objects\nExecuting: "
-			  << ACOL_RESET() << dlink_command << "\n";
-	}
-
-	if (std::system(dlink_command.c_str())) {
-		throw std::runtime_error("Device linking failed: " +
-					 dlink_command);
-	}
-	temp_mgr.add_file(dlink_path);
-
-	// combine everything
-	std::string final_command = "nvcc " + nvcc_args + " " + c_cpp_args;
-
-	for (const auto &obj : cu_obj_paths) {
-		final_command += obj + " ";
-	}
-	for (const auto &obj : ptx_obj_paths) {
-		final_command += obj + " ";
-	}
-
-	final_command += dlink_path.string() + " -o " + nvcc_opts.output_path;
-
-	if (sf_opts.enable_verbose) {
-		std::cout << ACOL(ACOL_Y, ACOL_BF)
-			  << "Final linking\nExecuting: " << ACOL_RESET()
-			  << final_command << "\n";
-	}
-
-	if (std::system(final_command.c_str())) {
-		throw std::runtime_error("Final linking failed: " +
-					 final_command);
 	}
 
 	return true;
