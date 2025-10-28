@@ -10,7 +10,6 @@
 #ifdef NDEBUG
 const inline std::string trap_ver = R"ptx(
 .visible .global .align 8 .u64 d_table;
-.global .align 1 .b8 $str[6] = {72, 101, 114, 101, 10};
 
 .visible .func __bounds_check_safecuda(
 	.param .b64 __bounds_check_safecuda_param_0
@@ -18,52 +17,52 @@ const inline std::string trap_ver = R"ptx(
 {
 	.reg .pred 	%p<12>;
 	.reg .b16 	%rs<11>;
-	.reg .b32 	%r<25>;
-	.reg .b64 	%rd<19>;
+	.reg .b32 	%r<24>;
+	.reg .b64 	%rd<17>;
 
 
 	ld.param.u64 	%rd6, [__bounds_check_safecuda_param_0];
-	ld.global.u64 	%rd9, [d_table];
-	add.s64 	%rd1, %rd9, 8;
-	ld.u32 	%r1, [%rd9+8];
+	ld.global.u64 	%rd7, [d_table];
+	add.s64 	%rd1, %rd7, 8;
+	ld.u32 	%r1, [%rd7+8];
 	setp.lt.u32 	%p1, %r1, 2;
-	ld.u64 	%rd2, [%rd9];
-	mov.u32 	%r23, -1;
+	ld.u64 	%rd2, [%rd7];
+	mov.u32 	%r22, -1;
 	mov.u16 	%rs9, 0;
 	@%p1 bra 	$L__BB0_7;
 
 	mov.u16 	%rs9, 0;
-	mov.u32 	%r23, -1;
-	mov.u32 	%r21, 1;
+	mov.u32 	%r22, -1;
+	mov.u32 	%r20, 1;
 
 $L__BB0_2:
-	cvt.u64.u32 	%rd3, %r21;
-	mul.wide.u32 	%rd10, %r21, 24;
-	add.s64 	%rd4, %rd2, %rd10;
+	cvt.u64.u32 	%rd3, %r20;
+	mul.wide.u32 	%rd8, %r20, 24;
+	add.s64 	%rd4, %rd2, %rd8;
 	ld.u64 	%rd5, [%rd4];
 	setp.gt.u64 	%p2, %rd5, %rd6;
 	@%p2 bra 	$L__BB0_6;
 
-	ld.u32 	%rd11, [%rd4+8];
-	add.s64 	%rd12, %rd5, %rd11;
-	setp.le.u64 	%p3, %rd12, %rd6;
+	ld.u32 	%rd9, [%rd4+8];
+	add.s64 	%rd10, %rd5, %rd9;
+	setp.le.u64 	%p3, %rd10, %rd6;
 	@%p3 bra 	$L__BB0_6;
 
 	ld.u32 	%r4, [%rd4+12];
 	setp.eq.s32 	%p4, %r4, 0;
 	@%p4 bra 	$L__BB0_14;
 
-	cvt.u32.u64 	%r13, %rd3;
-	shr.u32 	%r14, %r4, 1;
-	and.b32  	%r15, %r14, 1;
-	setp.eq.b32 	%p5, %r15, 1;
+	cvt.u32.u64 	%r12, %rd3;
+	shr.u32 	%r13, %r4, 1;
+	and.b32  	%r14, %r13, 1;
+	setp.eq.b32 	%p5, %r14, 1;
 	selp.b16 	%rs9, 1, %rs9, %p5;
-	selp.b32 	%r23, %r13, %r23, %p5;
+	selp.b32 	%r22, %r12, %r22, %p5;
 
 $L__BB0_6:
-	cvt.u32.u64 	%r16, %rd3;
-	add.s32 	%r21, %r16, 1;
-	setp.lt.u32 	%p6, %r21, %r1;
+	cvt.u32.u64 	%r15, %rd3;
+	add.s32 	%r20, %r15, 1;
+	setp.lt.u32 	%p6, %r20, %r1;
 	@%p6 bra 	$L__BB0_2;
 
 $L__BB0_7:
@@ -71,17 +70,17 @@ $L__BB0_7:
 	setp.eq.s16 	%p7, %rs7, 0;
 	@%p7 bra 	$L__BB0_11;
 
-	add.s64 	%rd13, %rd2, 12;
-	atom.or.b32 	%r17, [%rd13], 2;
-	and.b32  	%r18, %r17, 2;
-	setp.ne.s32 	%p8, %r18, 0;
+	add.s64 	%rd11, %rd2, 12;
+	atom.or.b32 	%r16, [%rd11], 2;
+	and.b32  	%r17, %r16, 2;
+	setp.ne.s32 	%p8, %r17, 0;
 	@%p8 bra 	$L__BB0_10;
 
-	ld.u64 	%rd14, [%rd1+-8];
-	st.u64 	[%rd14], %rd6;
-	ld.global.u64 	%rd15, [d_table];
-	ld.u64 	%rd16, [%rd15];
-	st.u32 	[%rd16+8], %r23;
+	ld.u64 	%rd12, [%rd1+-8];
+	st.u64 	[%rd12], %rd6;
+	ld.global.u64 	%rd13, [d_table];
+	ld.u64 	%rd14, [%rd13];
+	st.u32 	[%rd14+8], %r22;
 
 $L__BB0_10:
 	// begin inline asm
@@ -90,16 +89,16 @@ $L__BB0_10:
 	bra.uni 	$L__BB0_14;
 
 $L__BB0_11:
-	add.s64 	%rd17, %rd2, 12;
-	atom.or.b32 	%r19, [%rd17], 1;
-	and.b32  	%r20, %r19, 1;
-	setp.eq.b32 	%p9, %r20, 1;
+	add.s64 	%rd15, %rd2, 12;
+	atom.or.b32 	%r18, [%rd15], 1;
+	and.b32  	%r19, %r18, 1;
+	setp.eq.b32 	%p9, %r19, 1;
 	mov.pred 	%p10, 0;
 	xor.pred  	%p11, %p9, %p10;
 	@%p11 bra 	$L__BB0_13;
 
-	ld.u64 	%rd18, [%rd1+-8];
-	st.u64 	[%rd18], %rd6;
+	ld.u64 	%rd16, [%rd1+-8];
+	st.u64 	[%rd16], %rd6;
 
 $L__BB0_13:
 	// begin inline asm
@@ -115,101 +114,92 @@ $L__BB0_14:
 
 const inline std::string no_trap_ver = R"ptx(
 .visible .global .align 8 .u64 d_table;
-.global .align 1 .b8 $str[6] = {72, 101, 114, 101, 10};
 
-.visible .func __bounds_check_safecuda(
-	.param .b64 __bounds_check_safecuda_param_0
+.visible .func __bounds_check_safecuda_no_trap(
+	.param .b64 __bounds_check_safecuda_no_trap_param_0
 )
 {
 	.reg .pred 	%p<12>;
 	.reg .b16 	%rs<11>;
-	.reg .b32 	%r<25>;
-	.reg .b64 	%rd<19>;
+	.reg .b32 	%r<24>;
+	.reg .b64 	%rd<17>;
 
 
-	ld.param.u64 	%rd6, [__bounds_check_safecuda_param_0];
-	ld.global.u64 	%rd9, [d_table];
-	add.s64 	%rd1, %rd9, 8;
-	ld.u32 	%r1, [%rd9+8];
+	ld.param.u64 	%rd6, [__bounds_check_safecuda_no_trap_param_0];
+	ld.global.u64 	%rd7, [d_table];
+	add.s64 	%rd1, %rd7, 8;
+	ld.u32 	%r1, [%rd7+8];
 	setp.lt.u32 	%p1, %r1, 2;
-	ld.u64 	%rd2, [%rd9];
-	mov.u32 	%r23, -1;
+	ld.u64 	%rd2, [%rd7];
+	mov.u32 	%r22, -1;
 	mov.u16 	%rs9, 0;
 	@%p1 bra 	$L__BB0_7;
 
 	mov.u16 	%rs9, 0;
-	mov.u32 	%r23, -1;
-	mov.u32 	%r21, 1;
+	mov.u32 	%r22, -1;
+	mov.u32 	%r20, 1;
 
 $L__BB0_2:
-	cvt.u64.u32 	%rd3, %r21;
-	mul.wide.u32 	%rd10, %r21, 24;
-	add.s64 	%rd4, %rd2, %rd10;
+	cvt.u64.u32 	%rd3, %r20;
+	mul.wide.u32 	%rd8, %r20, 24;
+	add.s64 	%rd4, %rd2, %rd8;
 	ld.u64 	%rd5, [%rd4];
 	setp.gt.u64 	%p2, %rd5, %rd6;
 	@%p2 bra 	$L__BB0_6;
 
-	ld.u32 	%rd11, [%rd4+8];
-	add.s64 	%rd12, %rd5, %rd11;
-	setp.le.u64 	%p3, %rd12, %rd6;
+	ld.u32 	%rd9, [%rd4+8];
+	add.s64 	%rd10, %rd5, %rd9;
+	setp.le.u64 	%p3, %rd10, %rd6;
 	@%p3 bra 	$L__BB0_6;
 
 	ld.u32 	%r4, [%rd4+12];
 	setp.eq.s32 	%p4, %r4, 0;
-	@%p4 bra 	$L__BB0_14;
+	@%p4 bra 	$L__BB0_12;
 
-	cvt.u32.u64 	%r13, %rd3;
-	shr.u32 	%r14, %r4, 1;
-	and.b32  	%r15, %r14, 1;
-	setp.eq.b32 	%p5, %r15, 1;
+	cvt.u32.u64 	%r12, %rd3;
+	shr.u32 	%r13, %r4, 1;
+	and.b32  	%r14, %r13, 1;
+	setp.eq.b32 	%p5, %r14, 1;
 	selp.b16 	%rs9, 1, %rs9, %p5;
-	selp.b32 	%r23, %r13, %r23, %p5;
+	selp.b32 	%r22, %r12, %r22, %p5;
 
 $L__BB0_6:
-	cvt.u32.u64 	%r16, %rd3;
-	add.s32 	%r21, %r16, 1;
-	setp.lt.u32 	%p6, %r21, %r1;
+	cvt.u32.u64 	%r15, %rd3;
+	add.s32 	%r20, %r15, 1;
+	setp.lt.u32 	%p6, %r20, %r1;
 	@%p6 bra 	$L__BB0_2;
 
 $L__BB0_7:
 	and.b16  	%rs7, %rs9, 255;
 	setp.eq.s16 	%p7, %rs7, 0;
-	@%p7 bra 	$L__BB0_11;
+	@%p7 bra 	$L__BB0_10;
 
-	add.s64 	%rd13, %rd2, 12;
-	atom.or.b32 	%r17, [%rd13], 2;
-	and.b32  	%r18, %r17, 2;
-	setp.ne.s32 	%p8, %r18, 0;
-	@%p8 bra 	$L__BB0_10;
+	add.s64 	%rd11, %rd2, 12;
+	atom.or.b32 	%r16, [%rd11], 2;
+	and.b32  	%r17, %r16, 2;
+	setp.ne.s32 	%p8, %r17, 0;
+	@%p8 bra 	$L__BB0_12;
 
-	ld.u64 	%rd14, [%rd1+-8];
-	st.u64 	[%rd14], %rd6;
-	ld.global.u64 	%rd15, [d_table];
-	ld.u64 	%rd16, [%rd15];
-	st.u32 	[%rd16+8], %r23;
+	ld.u64 	%rd12, [%rd1+-8];
+	st.u64 	[%rd12], %rd6;
+	ld.global.u64 	%rd13, [d_table];
+	ld.u64 	%rd14, [%rd13];
+	st.u32 	[%rd14+8], %r22;
+	bra.uni 	$L__BB0_12;
 
 $L__BB0_10:
-	// begin inline asm
-	// end inline asm
-	bra.uni 	$L__BB0_14;
-
-$L__BB0_11:
-	add.s64 	%rd17, %rd2, 12;
-	atom.or.b32 	%r19, [%rd17], 1;
-	and.b32  	%r20, %r19, 1;
-	setp.eq.b32 	%p9, %r20, 1;
+	add.s64 	%rd15, %rd2, 12;
+	atom.or.b32 	%r18, [%rd15], 1;
+	and.b32  	%r19, %r18, 1;
+	setp.eq.b32 	%p9, %r19, 1;
 	mov.pred 	%p10, 0;
 	xor.pred  	%p11, %p9, %p10;
-	@%p11 bra 	$L__BB0_13;
+	@%p11 bra 	$L__BB0_12;
 
-	ld.u64 	%rd18, [%rd1+-8];
-	st.u64 	[%rd18], %rd6;
+	ld.u64 	%rd16, [%rd1+-8];
+	st.u64 	[%rd16], %rd6;
 
-$L__BB0_13:
-	// begin inline asm
-	// end inline asm
-
-$L__BB0_14:
+$L__BB0_12:
 	ret;
 
 }
@@ -219,12 +209,6 @@ $L__BB0_14:
 #else
 
 const inline std::string trap_ver = R"ptx(
-.extern .func  (.param .b32 func_retval0) vprintf
-(
-	.param .b64 vprintf_param_0,
-	.param .b64 vprintf_param_1
-)
-;
 .func __trap
 ()
 ;
@@ -234,8 +218,7 @@ const inline std::string trap_ver = R"ptx(
 	.param .b32 __uAtomicOr_param_1
 )
 ;
-.visible .const .align 8 .u64 d_table;
-.global .align 1 .b8 $str[6] = {72, 101, 114, 101, 10};
+.visible .global .align 8 .u64 d_table;
 
 .func  (.param .b32 func_retval0) _ZN42_INTERNAL_6da04a83_12_safecache_cu_d_table8atomicOrEPjj(
 	.param .b64 _ZN42_INTERNAL_6da04a83_12_safecache_cu_d_table8atomicOrEPjj_param_0,
@@ -283,83 +266,64 @@ $L__func_end0:
 {
 	.reg .pred 	%p<20>;
 	.reg .b16 	%rs<12>;
-	.reg .b32 	%r<25>;
-	.reg .b64 	%rd<39>;
-	.loc	5 27 0
+	.reg .b32 	%r<24>;
+	.reg .b64 	%rd<37>;
+	.loc	5 25 0
 $L__func_begin1:
-	.loc	5 27 0
+	.loc	5 25 0
 
 
 	ld.param.u64 	%rd3, [__bounds_check_safecuda_param_0];
 $L__tmp2:
-	.loc	5 29 2
-	mov.u64 	%rd4, $str;
-	cvta.global.u64 	%rd5, %rd4;
-	{ // callseq 1, 0
-	.reg .b32 temp_param_reg;
-	.param .b64 param0;
-	st.param.b64 	[param0+0], %rd5;
-	.param .b64 param1;
-	st.param.b64 	[param1+0], 0;
-	.param .b32 retval0;
-	call.uni (retval0),
-	vprintf,
-	(
-	param0,
-	param1
-	);
-	ld.param.b32 	%r9, [retval0+0];
-	} // callseq 1
-$L__tmp3:
-	.loc	5 31 2
+	.loc	5 28 2
 	mov.u16 	%rs6, 0;
 	mov.b16 	%rs1, %rs6;
+$L__tmp3:
+	.loc	5 29 2
+	mov.u32 	%r9, -1;
+	mov.b32 	%r1, %r9;
 $L__tmp4:
-	.loc	5 32 2
-	mov.u32 	%r10, -1;
-	mov.b32 	%r1, %r10;
+	.loc	5 31 2
+	mov.u32 	%r10, 1;
+	mov.b32 	%r2, %r10;
 $L__tmp5:
-	.loc	5 34 2
-	mov.u32 	%r11, 1;
-	mov.b32 	%r2, %r11;
-$L__tmp6:
 	mov.u16 	%rs9, %rs1;
+$L__tmp6:
+	mov.u32 	%r20, %r1;
 $L__tmp7:
-	mov.u32 	%r21, %r1;
+	mov.u32 	%r21, %r2;
 $L__tmp8:
-	mov.u32 	%r22, %r2;
-$L__tmp9:
 	bra.uni 	$L__BB1_1;
 
 $L__BB1_1:
-	mov.u32 	%r4, %r22;
-	mov.u32 	%r3, %r21;
+	mov.u32 	%r4, %r21;
+	mov.u32 	%r3, %r20;
 	mov.u16 	%rs2, %rs9;
+$L__tmp9:
+	mov.u64 	%rd4, d_table;
 $L__tmp10:
-	mov.u64 	%rd6, d_table;
-$L__tmp11:
-	cvta.const.u64 	%rd7, %rd6;
-	ld.u64 	%rd8, [%rd7];
-	ld.u32 	%r12, [%rd8+8];
-	setp.lt.u32 	%p3, %r4, %r12;
+	cvta.global.u64 	%rd5, %rd4;
+	ld.u64 	%rd6, [%rd5];
+	ld.u32 	%r11, [%rd6+8];
+	setp.lt.u32 	%p3, %r4, %r11;
 	not.pred 	%p4, %p3;
 	@%p4 bra 	$L__BB1_12;
 	bra.uni 	$L__BB1_2;
 
 $L__BB1_2:
+$L__tmp11:
+	.loc	5 32 3
+	mov.u64 	%rd27, d_table;
+	cvta.global.u64 	%rd28, %rd27;
+	ld.u64 	%rd29, [%rd28];
+	ld.u64 	%rd30, [%rd29];
+	cvt.u64.u32 	%rd31, %r4;
+	mul.lo.s64 	%rd32, %rd31, 24;
+	add.s64 	%rd2, %rd30, %rd32;
 $L__tmp12:
-	.loc	5 35 3
-	mov.u64 	%rd29, d_table;
-	cvta.const.u64 	%rd30, %rd29;
-	ld.u64 	%rd31, [%rd30];
-	ld.u64 	%rd32, [%rd31];
-	cvt.u64.u32 	%rd33, %r4;
-	mul.lo.s64 	%rd34, %rd33, 24;
-	add.s64 	%rd2, %rd32, %rd34;
-$L__tmp13:
-	.loc	5 37 3
-	ld.u64 	%rd35, [%rd2];
-	setp.le.u64 	%p12, %rd35, %rd3;
+	.loc	5 34 3
+	ld.u64 	%rd33, [%rd2];
+	setp.le.u64 	%p12, %rd33, %rd3;
 	mov.pred 	%p11, 0;
 	not.pred 	%p13, %p12;
 	mov.pred 	%p19, %p11;
@@ -367,12 +331,12 @@ $L__tmp13:
 	bra.uni 	$L__BB1_3;
 
 $L__BB1_3:
-	.loc	5 38 7
-	ld.u64 	%rd36, [%rd2];
-	ld.u32 	%r17, [%rd2+8];
-	cvt.u64.u32 	%rd37, %r17;
-	add.s64 	%rd38, %rd36, %rd37;
-	setp.lt.u64 	%p1, %rd3, %rd38;
+	.loc	5 35 7
+	ld.u64 	%rd34, [%rd2];
+	ld.u32 	%r16, [%rd2+8];
+	cvt.u64.u32 	%rd35, %r16;
+	add.s64 	%rd36, %rd34, %rd35;
+	setp.lt.u64 	%p1, %rd3, %rd36;
 	mov.pred 	%p19, %p1;
 	bra.uni 	$L__BB1_4;
 
@@ -380,88 +344,88 @@ $L__BB1_4:
 	mov.pred 	%p2, %p19;
 	not.pred 	%p14, %p2;
 	mov.u16 	%rs11, %rs2;
+$L__tmp13:
+	mov.u32 	%r23, %r3;
 $L__tmp14:
-	mov.u32 	%r24, %r3;
-$L__tmp15:
 	@%p14 bra 	$L__BB1_10;
 	bra.uni 	$L__BB1_5;
 
 $L__BB1_5:
-$L__tmp16:
-	.loc	5 40 4
-	ld.u32 	%r18, [%rd2+12];
-	setp.eq.s32 	%p15, %r18, 0;
+$L__tmp15:
+	.loc	5 37 4
+	ld.u32 	%r17, [%rd2+12];
+	setp.eq.s32 	%p15, %r17, 0;
 	not.pred 	%p16, %p15;
 	@%p16 bra 	$L__BB1_7;
 	bra.uni 	$L__BB1_6;
 
 $L__BB1_6:
-$L__tmp17:
-	.loc	5 41 5
+$L__tmp16:
+	.loc	5 38 5
 	bra.uni 	$L__BB1_19;
-$L__tmp18:
+$L__tmp17:
 
 $L__BB1_7:
-	.loc	5 43 4
-	ld.u32 	%r19, [%rd2+12];
-	.loc	5 44 8
-	and.b32  	%r20, %r19, 2;
-	setp.ne.s32 	%p17, %r20, 0;
+	.loc	5 40 4
+	ld.u32 	%r18, [%rd2+12];
+	.loc	5 41 8
+	and.b32  	%r19, %r18, 2;
+	setp.ne.s32 	%p17, %r19, 0;
 	not.pred 	%p18, %p17;
 	mov.u16 	%rs10, %rs2;
+$L__tmp18:
+	mov.u32 	%r22, %r3;
 $L__tmp19:
-	mov.u32 	%r23, %r3;
-$L__tmp20:
 	@%p18 bra 	$L__BB1_9;
 	bra.uni 	$L__BB1_8;
 
 $L__BB1_8:
-$L__tmp21:
-	.loc	5 45 5
+$L__tmp20:
+	.loc	5 42 5
 	mov.u16 	%rs8, 1;
 	mov.b16 	%rs3, %rs8;
-$L__tmp22:
-	.loc	5 46 5
+$L__tmp21:
+	.loc	5 43 5
 	mov.b32 	%r5, %r4;
-$L__tmp23:
+$L__tmp22:
 	mov.u16 	%rs10, %rs3;
+$L__tmp23:
+	mov.u32 	%r22, %r5;
 $L__tmp24:
-	mov.u32 	%r23, %r5;
-$L__tmp25:
 	bra.uni 	$L__BB1_9;
 
 $L__BB1_9:
-	mov.u32 	%r6, %r23;
+	mov.u32 	%r6, %r22;
 	mov.u16 	%rs4, %rs10;
-$L__tmp26:
+$L__tmp25:
 	mov.u16 	%rs11, %rs4;
+$L__tmp26:
+	mov.u32 	%r23, %r6;
 $L__tmp27:
-	mov.u32 	%r24, %r6;
-$L__tmp28:
 	bra.uni 	$L__BB1_10;
-$L__tmp29:
+$L__tmp28:
 
 $L__BB1_10:
-	.loc	5 34 48
-	mov.u32 	%r7, %r24;
+	.loc	5 31 48
+	mov.u32 	%r7, %r23;
 	mov.u16 	%rs5, %rs11;
-$L__tmp30:
+$L__tmp29:
 	bra.uni 	$L__BB1_11;
 
 $L__BB1_11:
 	add.s32 	%r8, %r4, 1;
-$L__tmp31:
+$L__tmp30:
 	mov.u16 	%rs9, %rs5;
+$L__tmp31:
+	mov.u32 	%r20, %r7;
 $L__tmp32:
-	mov.u32 	%r21, %r7;
+	mov.u32 	%r21, %r8;
 $L__tmp33:
-	mov.u32 	%r22, %r8;
-$L__tmp34:
 	bra.uni 	$L__BB1_1;
-$L__tmp35:
+$L__tmp34:
 
 $L__BB1_12:
-	.loc	5 51 2
+	.loc	5 48 2
 	and.b16  	%rs7, %rs2, 255;
 	setp.ne.s16 	%p5, %rs7, 0;
 	not.pred 	%p6, %p5;
@@ -469,18 +433,18 @@ $L__BB1_12:
 	bra.uni 	$L__BB1_13;
 
 $L__BB1_13:
-$L__tmp36:
-	.loc	5 52 3
-	mov.u64 	%rd18, d_table;
-	cvta.const.u64 	%rd19, %rd18;
-	ld.u64 	%rd20, [%rd19];
-	ld.u64 	%rd21, [%rd20];
-	add.s64 	%rd22, %rd21, 12;
-	.loc	5 52 20
-	{ // callseq 4, 0
+$L__tmp35:
+	.loc	5 49 3
+	mov.u64 	%rd16, d_table;
+	cvta.global.u64 	%rd17, %rd16;
+	ld.u64 	%rd18, [%rd17];
+	ld.u64 	%rd19, [%rd18];
+	add.s64 	%rd20, %rd19, 12;
+	.loc	5 49 20
+	{ // callseq 3, 0
 	.reg .b32 temp_param_reg;
 	.param .b64 param0;
-	st.param.b64 	[param0+0], %rd22;
+	st.param.b64 	[param0+0], %rd20;
 	.param .b32 param1;
 	st.param.b32 	[param1+0], 2;
 	.param .b32 retval0;
@@ -490,56 +454,56 @@ $L__tmp36:
 	param0,
 	param1
 	);
-	ld.param.b32 	%r15, [retval0+0];
-$L__tmp37:
-	} // callseq 4
-	.loc	5 54 3
-	and.b32  	%r16, %r15, 2;
-	setp.eq.s32 	%p9, %r16, 0;
+	ld.param.b32 	%r14, [retval0+0];
+$L__tmp36:
+	} // callseq 3
+	.loc	5 51 3
+	and.b32  	%r15, %r14, 2;
+	setp.eq.s32 	%p9, %r15, 0;
 	not.pred 	%p10, %p9;
 	@%p10 bra 	$L__BB1_15;
 	bra.uni 	$L__BB1_14;
 
 $L__BB1_14:
-$L__tmp38:
-	.loc	5 55 4
-	mov.u64 	%rd23, d_table;
-	cvta.const.u64 	%rd24, %rd23;
-	ld.u64 	%rd25, [%rd24];
+$L__tmp37:
+	.loc	5 52 4
+	mov.u64 	%rd21, d_table;
+	cvta.global.u64 	%rd22, %rd21;
+	ld.u64 	%rd23, [%rd22];
+	ld.u64 	%rd24, [%rd23];
+	st.u64 	[%rd24], %rd3;
+	.loc	5 53 4
+	ld.u64 	%rd25, [%rd22];
 	ld.u64 	%rd26, [%rd25];
-	st.u64 	[%rd26], %rd3;
-	.loc	5 56 4
-	ld.u64 	%rd27, [%rd24];
-	ld.u64 	%rd28, [%rd27];
-	st.u32 	[%rd28+8], %r3;
+	st.u32 	[%rd26+8], %r3;
 	bra.uni 	$L__BB1_15;
-$L__tmp39:
+$L__tmp38:
 
 $L__BB1_15:
-	.loc	5 58 3
-	{ // callseq 5, 0
+	.loc	5 55 3
+	{ // callseq 4, 0
 	.reg .b32 temp_param_reg;
 	call.uni
 	__trap,
 	(
 	);
-	} // callseq 5
-	.loc	5 59 3
+	} // callseq 4
+	.loc	5 56 3
 	bra.uni 	$L__BB1_19;
-$L__tmp40:
+$L__tmp39:
 
 $L__BB1_16:
-	.loc	5 62 2
-	mov.u64 	%rd9, d_table;
-	cvta.const.u64 	%rd10, %rd9;
-	ld.u64 	%rd11, [%rd10];
-	ld.u64 	%rd12, [%rd11];
-	add.s64 	%rd13, %rd12, 12;
-	.loc	5 62 19
-	{ // callseq 2, 0
+	.loc	5 59 2
+	mov.u64 	%rd7, d_table;
+	cvta.global.u64 	%rd8, %rd7;
+	ld.u64 	%rd9, [%rd8];
+	ld.u64 	%rd10, [%rd9];
+	add.s64 	%rd11, %rd10, 12;
+	.loc	5 59 19
+	{ // callseq 1, 0
 	.reg .b32 temp_param_reg;
 	.param .b64 param0;
-	st.param.b64 	[param0+0], %rd13;
+	st.param.b64 	[param0+0], %rd11;
 	.param .b32 param1;
 	st.param.b32 	[param1+0], 1;
 	.param .b32 retval0;
@@ -549,42 +513,42 @@ $L__BB1_16:
 	param0,
 	param1
 	);
-	ld.param.b32 	%r13, [retval0+0];
-$L__tmp41:
-	} // callseq 2
-	.loc	5 65 2
-	and.b32  	%r14, %r13, 1;
-	setp.eq.s32 	%p7, %r14, 0;
+	ld.param.b32 	%r12, [retval0+0];
+$L__tmp40:
+	} // callseq 1
+	.loc	5 62 2
+	and.b32  	%r13, %r12, 1;
+	setp.eq.s32 	%p7, %r13, 0;
 	not.pred 	%p8, %p7;
 	@%p8 bra 	$L__BB1_18;
 	bra.uni 	$L__BB1_17;
 
 $L__BB1_17:
-$L__tmp42:
-	.loc	5 66 3
-	mov.u64 	%rd14, d_table;
-	cvta.const.u64 	%rd15, %rd14;
-	ld.u64 	%rd16, [%rd15];
-	ld.u64 	%rd17, [%rd16];
-	st.u64 	[%rd17], %rd3;
+$L__tmp41:
+	.loc	5 63 3
+	mov.u64 	%rd12, d_table;
+	cvta.global.u64 	%rd13, %rd12;
+	ld.u64 	%rd14, [%rd13];
+	ld.u64 	%rd15, [%rd14];
+	st.u64 	[%rd15], %rd3;
 	bra.uni 	$L__BB1_18;
-$L__tmp43:
+$L__tmp42:
 
 $L__BB1_18:
-	.loc	5 70 2
-	{ // callseq 3, 0
+	.loc	5 67 2
+	{ // callseq 2, 0
 	.reg .b32 temp_param_reg;
 	call.uni
 	__trap,
 	(
 	);
-	} // callseq 3
-	.loc	5 71 1
+	} // callseq 2
+	.loc	5 68 1
 	bra.uni 	$L__BB1_19;
 
 $L__BB1_19:
 	ret;
-$L__tmp44:
+$L__tmp43:
 $L__func_end1:
 
 }
@@ -626,8 +590,8 @@ $L__func_end3:
 	.file	7 "/usr/local/cuda/bin/../targets/x86_64-linux/include/device_atomic_functions.hpp"
 	.section	.debug_loc
 	{
-.b64 $L__tmp4
-.b64 $L__tmp7
+.b64 $L__tmp3
+.b64 $L__tmp6
 .b8 6
 .b8 0
 .b8 144
@@ -636,8 +600,8 @@ $L__func_end3:
 .b8 201
 .b8 171
 .b8 2
-.b64 $L__tmp7
-.b64 $L__tmp11
+.b64 $L__tmp6
+.b64 $L__tmp10
 .b8 6
 .b8 0
 .b8 144
@@ -646,8 +610,8 @@ $L__func_end3:
 .b8 201
 .b8 171
 .b8 2
-.b64 $L__tmp11
-.b64 $L__tmp14
+.b64 $L__tmp10
+.b64 $L__tmp13
 .b8 6
 .b8 0
 .b8 144
@@ -656,8 +620,8 @@ $L__func_end3:
 .b8 201
 .b8 171
 .b8 2
-.b64 $L__tmp14
-.b64 $L__tmp19
+.b64 $L__tmp13
+.b64 $L__tmp18
 .b8 7
 .b8 0
 .b8 144
@@ -667,8 +631,8 @@ $L__func_end3:
 .b8 147
 .b8 215
 .b8 4
-.b64 $L__tmp19
-.b64 $L__tmp22
+.b64 $L__tmp18
+.b64 $L__tmp21
 .b8 7
 .b8 0
 .b8 144
@@ -678,8 +642,8 @@ $L__func_end3:
 .b8 147
 .b8 215
 .b8 4
-.b64 $L__tmp22
-.b64 $L__tmp24
+.b64 $L__tmp21
+.b64 $L__tmp23
 .b8 6
 .b8 0
 .b8 144
@@ -688,8 +652,8 @@ $L__func_end3:
 .b8 201
 .b8 171
 .b8 2
-.b64 $L__tmp24
-.b64 $L__tmp26
+.b64 $L__tmp23
+.b64 $L__tmp25
 .b8 7
 .b8 0
 .b8 144
@@ -699,8 +663,8 @@ $L__func_end3:
 .b8 147
 .b8 215
 .b8 4
+.b64 $L__tmp25
 .b64 $L__tmp26
-.b64 $L__tmp27
 .b8 6
 .b8 0
 .b8 144
@@ -709,8 +673,8 @@ $L__func_end3:
 .b8 201
 .b8 171
 .b8 2
-.b64 $L__tmp27
-.b64 $L__tmp30
+.b64 $L__tmp26
+.b64 $L__tmp29
 .b8 7
 .b8 0
 .b8 144
@@ -720,8 +684,8 @@ $L__func_end3:
 .b8 147
 .b8 215
 .b8 4
-.b64 $L__tmp30
-.b64 $L__tmp32
+.b64 $L__tmp29
+.b64 $L__tmp31
 .b8 6
 .b8 0
 .b8 144
@@ -730,7 +694,7 @@ $L__func_end3:
 .b8 201
 .b8 171
 .b8 2
-.b64 $L__tmp32
+.b64 $L__tmp31
 .b64 $L__func_end1
 .b8 6
 .b8 0
@@ -738,6 +702,113 @@ $L__func_end3:
 .b8 185
 .b8 230
 .b8 201
+.b8 171
+.b8 2
+.b64 0
+.b64 0
+.b64 $L__tmp4
+.b64 $L__tmp7
+.b8 5
+.b8 0
+.b8 144
+.b8 177
+.b8 228
+.b8 149
+.b8 1
+.b64 $L__tmp7
+.b64 $L__tmp9
+.b8 6
+.b8 0
+.b8 144
+.b8 176
+.b8 228
+.b8 200
+.b8 171
+.b8 2
+.b64 $L__tmp9
+.b64 $L__tmp14
+.b8 5
+.b8 0
+.b8 144
+.b8 179
+.b8 228
+.b8 149
+.b8 1
+.b64 $L__tmp14
+.b64 $L__tmp19
+.b8 6
+.b8 0
+.b8 144
+.b8 179
+.b8 228
+.b8 200
+.b8 171
+.b8 2
+.b64 $L__tmp19
+.b64 $L__tmp22
+.b8 6
+.b8 0
+.b8 144
+.b8 178
+.b8 228
+.b8 200
+.b8 171
+.b8 2
+.b64 $L__tmp22
+.b64 $L__tmp24
+.b8 5
+.b8 0
+.b8 144
+.b8 181
+.b8 228
+.b8 149
+.b8 1
+.b64 $L__tmp24
+.b64 $L__tmp25
+.b8 6
+.b8 0
+.b8 144
+.b8 178
+.b8 228
+.b8 200
+.b8 171
+.b8 2
+.b64 $L__tmp25
+.b64 $L__tmp27
+.b8 5
+.b8 0
+.b8 144
+.b8 182
+.b8 228
+.b8 149
+.b8 1
+.b64 $L__tmp27
+.b64 $L__tmp29
+.b8 6
+.b8 0
+.b8 144
+.b8 179
+.b8 228
+.b8 200
+.b8 171
+.b8 2
+.b64 $L__tmp29
+.b64 $L__tmp32
+.b8 5
+.b8 0
+.b8 144
+.b8 183
+.b8 228
+.b8 149
+.b8 1
+.b64 $L__tmp32
+.b64 $L__func_end1
+.b8 6
+.b8 0
+.b8 144
+.b8 176
+.b8 228
+.b8 200
 .b8 171
 .b8 2
 .b64 0
@@ -747,7 +818,7 @@ $L__func_end3:
 .b8 5
 .b8 0
 .b8 144
-.b8 177
+.b8 178
 .b8 228
 .b8 149
 .b8 1
@@ -762,78 +833,20 @@ $L__func_end3:
 .b8 171
 .b8 2
 .b64 $L__tmp10
-.b64 $L__tmp15
-.b8 5
-.b8 0
-.b8 144
-.b8 179
-.b8 228
-.b8 149
-.b8 1
-.b64 $L__tmp15
-.b64 $L__tmp20
-.b8 6
-.b8 0
-.b8 144
-.b8 180
-.b8 228
-.b8 200
-.b8 171
-.b8 2
-.b64 $L__tmp20
-.b64 $L__tmp23
-.b8 6
-.b8 0
-.b8 144
-.b8 179
-.b8 228
-.b8 200
-.b8 171
-.b8 2
-.b64 $L__tmp23
-.b64 $L__tmp25
-.b8 5
-.b8 0
-.b8 144
-.b8 181
-.b8 228
-.b8 149
-.b8 1
-.b64 $L__tmp25
-.b64 $L__tmp26
-.b8 6
-.b8 0
-.b8 144
-.b8 179
-.b8 228
-.b8 200
-.b8 171
-.b8 2
-.b64 $L__tmp26
-.b64 $L__tmp28
-.b8 5
-.b8 0
-.b8 144
-.b8 182
-.b8 228
-.b8 149
-.b8 1
-.b64 $L__tmp28
 .b64 $L__tmp30
-.b8 6
+.b8 5
 .b8 0
 .b8 144
 .b8 180
 .b8 228
-.b8 200
-.b8 171
-.b8 2
+.b8 149
+.b8 1
 .b64 $L__tmp30
 .b64 $L__tmp33
 .b8 5
 .b8 0
 .b8 144
-.b8 183
+.b8 184
 .b8 228
 .b8 149
 .b8 1
@@ -843,55 +856,6 @@ $L__func_end3:
 .b8 0
 .b8 144
 .b8 177
-.b8 228
-.b8 200
-.b8 171
-.b8 2
-.b64 0
-.b64 0
-.b64 $L__tmp6
-.b64 $L__tmp9
-.b8 5
-.b8 0
-.b8 144
-.b8 178
-.b8 228
-.b8 149
-.b8 1
-.b64 $L__tmp9
-.b64 $L__tmp11
-.b8 6
-.b8 0
-.b8 144
-.b8 178
-.b8 228
-.b8 200
-.b8 171
-.b8 2
-.b64 $L__tmp11
-.b64 $L__tmp31
-.b8 5
-.b8 0
-.b8 144
-.b8 180
-.b8 228
-.b8 149
-.b8 1
-.b64 $L__tmp31
-.b64 $L__tmp34
-.b8 5
-.b8 0
-.b8 144
-.b8 184
-.b8 228
-.b8 149
-.b8 1
-.b64 $L__tmp34
-.b64 $L__func_end1
-.b8 6
-.b8 0
-.b8 144
-.b8 178
 .b8 228
 .b8 200
 .b8 171
@@ -1143,8 +1107,8 @@ $L__func_end3:
 .b32 148
 .b8 1
 .b8 5
-.b8 25
-.b8 4
+.b8 23
+.b8 5
 .b8 9
 .b8 3
 .b64 d_table
@@ -1329,7 +1293,7 @@ $L__func_end3:
 .b8 95,95,98,111,117,110,100,115,95,99,104,101,99,107,95,115,97,102,101,99,117,100,97
 .b8 0
 .b8 5
-.b8 27
+.b8 25
 .b32 919
 .b8 1
 .b8 9
@@ -1344,11 +1308,11 @@ $L__func_end3:
 .b8 112,116,114
 .b8 0
 .b8 5
-.b8 27
+.b8 25
 .b32 934
 .b8 11
 .b64 $L__tmp2
-.b64 $L__tmp44
+.b64 $L__tmp43
 .b8 12
 .b8 6
 .b8 144
@@ -1361,26 +1325,26 @@ $L__func_end3:
 .b8 97,100,100,114
 .b8 0
 .b8 5
-.b8 30
+.b8 27
 .b32 943
 .b8 13
 .b32 .debug_loc
 .b8 102,114,101,101,100
 .b8 0
 .b8 5
-.b8 31
+.b8 28
 .b32 948
 .b8 13
 .b32 .debug_loc+284
 .b8 105,100,120
 .b8 0
 .b8 5
-.b8 32
+.b8 29
 .b32 477
 .b8 12
 .b8 6
 .b8 144
-.b8 179
+.b8 178
 .b8 226
 .b8 200
 .b8 171
@@ -1389,21 +1353,21 @@ $L__func_end3:
 .b8 111,108,100
 .b8 0
 .b8 5
-.b8 62
+.b8 59
 .b32 956
 .b8 11
-.b64 $L__tmp5
-.b64 $L__tmp35
+.b64 $L__tmp4
+.b64 $L__tmp34
 .b8 13
 .b32 .debug_loc+559
 .b8 105
 .b8 0
 .b8 5
-.b8 34
+.b8 31
 .b32 403
 .b8 11
-.b64 $L__tmp12
-.b64 $L__tmp29
+.b64 $L__tmp11
+.b64 $L__tmp28
 .b8 12
 .b8 6
 .b8 144
@@ -1416,17 +1380,17 @@ $L__func_end3:
 .b8 101,110,116,114,121
 .b8 0
 .b8 5
-.b8 35
+.b8 32
 .b32 253
 .b8 0
 .b8 0
 .b8 11
-.b64 $L__tmp36
-.b64 $L__tmp40
+.b64 $L__tmp35
+.b64 $L__tmp39
 .b8 12
 .b8 6
 .b8 144
-.b8 181
+.b8 180
 .b8 226
 .b8 200
 .b8 171
@@ -1435,7 +1399,7 @@ $L__func_end3:
 .b8 111,108,100
 .b8 0
 .b8 5
-.b8 52
+.b8 49
 .b32 956
 .b8 0
 .b8 0
@@ -1469,28 +1433,17 @@ $L__func_end3:
 )ptx";
 
 const inline std::string no_trap_ver = R"ptx(
-.extern .func  (.param .b32 func_retval0) vprintf
-(
-	.param .b64 vprintf_param_0,
-	.param .b64 vprintf_param_1
-)
-;
-.func __trap
-()
-;
 .func  (.param .b32 func_retval0) __uAtomicOr
 (
 	.param .b64 __uAtomicOr_param_0,
 	.param .b32 __uAtomicOr_param_1
 )
 ;
-.extern .global .align 1 .u8 FREED_MEM_DEV = 1;
-.extern .const .align 8 .u64 d_table;
-.global .align 1 .b8 $str[6] = {72, 101, 114, 101, 10};
+.visible .global .align 8 .u64 d_table;
 
-.func  (.param .b32 func_retval0) _ZN43_INTERNAL_b1f57ba6_12_safecache_cu_237960b88atomicOrEPjj(
-	.param .b64 _ZN43_INTERNAL_b1f57ba6_12_safecache_cu_237960b88atomicOrEPjj_param_0,
-	.param .b32 _ZN43_INTERNAL_b1f57ba6_12_safecache_cu_237960b88atomicOrEPjj_param_1
+.func  (.param .b32 func_retval0) _ZN42_INTERNAL_6da04a83_12_safecache_cu_d_table8atomicOrEPjj(
+	.param .b64 _ZN42_INTERNAL_6da04a83_12_safecache_cu_d_table8atomicOrEPjj_param_0,
+	.param .b32 _ZN42_INTERNAL_6da04a83_12_safecache_cu_d_table8atomicOrEPjj_param_1
 )
 {
 	.reg .b32 	%r<4>;
@@ -1500,8 +1453,8 @@ $L__func_begin0:
 	.loc	7 185 0
 
 
-	ld.param.u64 	%rd1, [_ZN43_INTERNAL_b1f57ba6_12_safecache_cu_237960b88atomicOrEPjj_param_0];
-	ld.param.u32 	%r1, [_ZN43_INTERNAL_b1f57ba6_12_safecache_cu_237960b88atomicOrEPjj_param_1];
+	ld.param.u64 	%rd1, [_ZN42_INTERNAL_6da04a83_12_safecache_cu_d_table8atomicOrEPjj_param_0];
+	ld.param.u32 	%r1, [_ZN42_INTERNAL_6da04a83_12_safecache_cu_d_table8atomicOrEPjj_param_1];
 $L__tmp0:
 	.loc	7 187 3
 	mov.b64 	%rd2, %rd1;
@@ -1527,129 +1480,192 @@ $L__tmp1:
 $L__func_end0:
 
 }
-
-.func __bounds_check_safecuda_no_trap(
+	// .globl	__bounds_check_safecuda_no_trap
+.visible .func __bounds_check_safecuda_no_trap(
 	.param .b64 __bounds_check_safecuda_no_trap_param_0
 )
 {
-	.local .align 8 .b8 	__local_depot2[8];
-	.reg .b64 	%SP;
-	.reg .b64 	%SPL;
-	.reg .pred 	%p<37>;
-	.reg .b16 	%rs<13>;
-	.reg .b32 	%r<33>;
-	.reg .b64 	%rd<70>;
-	.loc	5 120 0
-$L__func_begin2:
-	.loc	5 120 0
+	.reg .pred 	%p<20>;
+	.reg .b16 	%rs<12>;
+	.reg .b32 	%r<24>;
+	.reg .b64 	%rd<37>;
+	.loc	5 25 0
+$L__func_begin1:
+	.loc	5 25 0
 
 
-	mov.u64 	%SPL, __local_depot2;
-	cvta.local.u64 	%SP, %SPL;
-	ld.param.u64 	%rd5, [__bounds_check_safecuda_no_trap_param_0];
-$L__tmp45:
-	.loc	5 122 2
-	mov.u64 	%rd6, $str;
-	cvta.global.u64 	%rd7, %rd6;
-	{ // callseq 6, 0
-	.reg .b32 temp_param_reg;
-	.param .b64 param0;
-	st.param.b64 	[param0+0], %rd7;
-	.param .b64 param1;
-	st.param.b64 	[param1+0], 0;
-	.param .b32 retval0;
-	call.uni (retval0),
-	vprintf,
-	(
-	param0,
-	param1
-	);
-	ld.param.b32 	%r9, [retval0+0];
-	} // callseq 6
-	.loc	5 124 3
-	add.s64 	%rd1, %rd5, -16;
-$L__tmp46:
-	.loc	5 126 2
-	ld.u16 	%rs6, [%rd1];
-	cvt.u32.u16 	%r10, %rs6;
-	setp.eq.s32 	%p5, %r10, 23294;
-	not.pred 	%p6, %p5;
-	@%p6 bra 	$L__BB2_14;
-	bra.uni 	$L__BB2_1;
+	ld.param.u64 	%rd3, [__bounds_check_safecuda_no_trap_param_0];
+$L__tmp2:
+	.loc	5 28 2
+	mov.u16 	%rs6, 0;
+	mov.b16 	%rs1, %rs6;
+$L__tmp3:
+	.loc	5 29 2
+	mov.u32 	%r9, -1;
+	mov.b32 	%r1, %r9;
+$L__tmp4:
+	.loc	5 31 2
+	mov.u32 	%r10, 1;
+	mov.b32 	%r2, %r10;
+$L__tmp5:
+	mov.u16 	%rs9, %rs1;
+$L__tmp6:
+	mov.u32 	%r20, %r1;
+$L__tmp7:
+	mov.u32 	%r21, %r2;
+$L__tmp8:
+	bra.uni 	$L__BB1_1;
 
-$L__BB2_1:
-$L__tmp47:
-	.loc	5 127 3
-	ld.u64 	%rd8, [%rd1+8];
-	mov.b64 	%rd9, %rd8;
-	st.u64 	[%SP+0], %rd9;
-	.loc	5 129 3
-	ld.u64 	%rd10, [%SP+0];
-	setp.eq.s64 	%p7, %rd10, 0;
-	not.pred 	%p8, %p7;
-	@%p8 bra 	$L__BB2_3;
-	bra.uni 	$L__BB2_2;
+$L__BB1_1:
+	mov.u32 	%r4, %r21;
+	mov.u32 	%r3, %r20;
+	mov.u16 	%rs2, %rs9;
+$L__tmp9:
+	mov.u64 	%rd4, d_table;
+$L__tmp10:
+	cvta.global.u64 	%rd5, %rd4;
+	ld.u64 	%rd6, [%rd5];
+	ld.u32 	%r11, [%rd6+8];
+	setp.lt.u32 	%p3, %r4, %r11;
+	not.pred 	%p4, %p3;
+	@%p4 bra 	$L__BB1_12;
+	bra.uni 	$L__BB1_2;
 
-$L__BB2_2:
-$L__tmp48:
-	.loc	5 130 4
-	bra.uni 	$L__BB2_15;
-$L__tmp49:
-
-$L__BB2_3:
-	.loc	5 134 3
-	ld.u64 	%rd11, [%SP+0];
-	ld.u64 	%rd12, [%rd11];
-	setp.ge.u64 	%p10, %rd5, %rd12;
-	mov.pred 	%p9, 0;
-	not.pred 	%p11, %p10;
-	mov.pred 	%p35, %p9;
-	@%p11 bra 	$L__BB2_5;
-	bra.uni 	$L__BB2_4;
-
-$L__BB2_4:
-	.loc	5 135 7
-	ld.u64 	%rd13, [%SP+0];
-	ld.u64 	%rd14, [%rd13];
-	ld.u64 	%rd15, [%SP+0];
-	ld.u32 	%r11, [%rd15+8];
-	cvt.u64.u32 	%rd16, %r11;
-	add.s64 	%rd17, %rd14, %rd16;
-	setp.lt.u64 	%p1, %rd5, %rd17;
-	mov.pred 	%p35, %p1;
-	bra.uni 	$L__BB2_5;
-
-$L__BB2_5:
-	mov.pred 	%p2, %p35;
-	not.pred 	%p12, %p2;
-	@%p12 bra 	$L__BB2_11;
-	bra.uni 	$L__BB2_6;
-
-$L__BB2_6:
-$L__tmp50:
-	.loc	5 137 4
-	ld.u64 	%rd27, [%SP+0];
-	ld.u32 	%r14, [%rd27+12];
-	.loc	5 138 8
-	and.b32  	%r15, %r14, 2;
-	setp.ne.s32 	%p15, %r15, 0;
-	not.pred 	%p16, %p15;
-	@%p16 bra 	$L__BB2_10;
-	bra.uni 	$L__BB2_7;
-
-$L__BB2_7:
-$L__tmp51:
-	.loc	5 140 6
-	mov.u64 	%rd28, d_table;
-	cvta.const.u64 	%rd29, %rd28;
+$L__BB1_2:
+$L__tmp11:
+	.loc	5 32 3
+	mov.u64 	%rd27, d_table;
+	cvta.global.u64 	%rd28, %rd27;
+	ld.u64 	%rd29, [%rd28];
 	ld.u64 	%rd30, [%rd29];
-	ld.u64 	%rd31, [%rd30];
-	add.s64 	%rd32, %rd31, 12;
-	.loc	5 139 22
-	{ // callseq 8, 0
+	cvt.u64.u32 	%rd31, %r4;
+	mul.lo.s64 	%rd32, %rd31, 24;
+	add.s64 	%rd2, %rd30, %rd32;
+$L__tmp12:
+	.loc	5 34 3
+	ld.u64 	%rd33, [%rd2];
+	setp.le.u64 	%p12, %rd33, %rd3;
+	mov.pred 	%p11, 0;
+	not.pred 	%p13, %p12;
+	mov.pred 	%p19, %p11;
+	@%p13 bra 	$L__BB1_4;
+	bra.uni 	$L__BB1_3;
+
+$L__BB1_3:
+	.loc	5 35 7
+	ld.u64 	%rd34, [%rd2];
+	ld.u32 	%r16, [%rd2+8];
+	cvt.u64.u32 	%rd35, %r16;
+	add.s64 	%rd36, %rd34, %rd35;
+	setp.lt.u64 	%p1, %rd3, %rd36;
+	mov.pred 	%p19, %p1;
+	bra.uni 	$L__BB1_4;
+
+$L__BB1_4:
+	mov.pred 	%p2, %p19;
+	not.pred 	%p14, %p2;
+	mov.u16 	%rs11, %rs2;
+$L__tmp13:
+	mov.u32 	%r23, %r3;
+$L__tmp14:
+	@%p14 bra 	$L__BB1_10;
+	bra.uni 	$L__BB1_5;
+
+$L__BB1_5:
+$L__tmp15:
+	.loc	5 37 4
+	ld.u32 	%r17, [%rd2+12];
+	setp.eq.s32 	%p15, %r17, 0;
+	not.pred 	%p16, %p15;
+	@%p16 bra 	$L__BB1_7;
+	bra.uni 	$L__BB1_6;
+
+$L__BB1_6:
+$L__tmp16:
+	.loc	5 38 5
+	bra.uni 	$L__BB1_19;
+$L__tmp17:
+
+$L__BB1_7:
+	.loc	5 40 4
+	ld.u32 	%r18, [%rd2+12];
+	.loc	5 41 8
+	and.b32  	%r19, %r18, 2;
+	setp.ne.s32 	%p17, %r19, 0;
+	not.pred 	%p18, %p17;
+	mov.u16 	%rs10, %rs2;
+$L__tmp18:
+	mov.u32 	%r22, %r3;
+$L__tmp19:
+	@%p18 bra 	$L__BB1_9;
+	bra.uni 	$L__BB1_8;
+
+$L__BB1_8:
+$L__tmp20:
+	.loc	5 42 5
+	mov.u16 	%rs8, 1;
+	mov.b16 	%rs3, %rs8;
+$L__tmp21:
+	.loc	5 43 5
+	mov.b32 	%r5, %r4;
+$L__tmp22:
+	mov.u16 	%rs10, %rs3;
+$L__tmp23:
+	mov.u32 	%r22, %r5;
+$L__tmp24:
+	bra.uni 	$L__BB1_9;
+
+$L__BB1_9:
+	mov.u32 	%r6, %r22;
+	mov.u16 	%rs4, %rs10;
+$L__tmp25:
+	mov.u16 	%rs11, %rs4;
+$L__tmp26:
+	mov.u32 	%r23, %r6;
+$L__tmp27:
+	bra.uni 	$L__BB1_10;
+$L__tmp28:
+
+$L__BB1_10:
+	.loc	5 31 48
+	mov.u32 	%r7, %r23;
+	mov.u16 	%rs5, %rs11;
+$L__tmp29:
+	bra.uni 	$L__BB1_11;
+
+$L__BB1_11:
+	add.s32 	%r8, %r4, 1;
+$L__tmp30:
+	mov.u16 	%rs9, %rs5;
+$L__tmp31:
+	mov.u32 	%r20, %r7;
+$L__tmp32:
+	mov.u32 	%r21, %r8;
+$L__tmp33:
+	bra.uni 	$L__BB1_1;
+$L__tmp34:
+
+$L__BB1_12:
+	.loc	5 48 2
+	and.b16  	%rs7, %rs2, 255;
+	setp.ne.s16 	%p5, %rs7, 0;
+	not.pred 	%p6, %p5;
+	@%p6 bra 	$L__BB1_16;
+	bra.uni 	$L__BB1_13;
+
+$L__BB1_13:
+$L__tmp35:
+	.loc	5 49 3
+	mov.u64 	%rd16, d_table;
+	cvta.global.u64 	%rd17, %rd16;
+	ld.u64 	%rd18, [%rd17];
+	ld.u64 	%rd19, [%rd18];
+	add.s64 	%rd20, %rd19, 12;
+	.loc	5 49 20
+	{ // callseq 2, 0
 	.reg .b32 temp_param_reg;
 	.param .b64 param0;
-	st.param.b64 	[param0+0], %rd32;
+	st.param.b64 	[param0+0], %rd20;
 	.param .b32 param1;
 	st.param.b32 	[param1+0], 2;
 	.param .b32 retval0;
@@ -1659,47 +1675,48 @@ $L__tmp51:
 	param0,
 	param1
 	);
-	ld.param.b32 	%r16, [retval0+0];
-$L__tmp52:
-	} // callseq 8
-	.loc	5 143 10
-	and.b32  	%r17, %r16, 2;
-	.loc	5 144 9
-	setp.eq.s32 	%p17, %r17, 0;
-	not.pred 	%p18, %p17;
-	@%p18 bra 	$L__BB2_9;
-	bra.uni 	$L__BB2_8;
+	ld.param.b32 	%r14, [retval0+0];
+$L__tmp36:
+	} // callseq 2
+	.loc	5 51 3
+	and.b32  	%r15, %r14, 2;
+	setp.eq.s32 	%p9, %r15, 0;
+	not.pred 	%p10, %p9;
+	@%p10 bra 	$L__BB1_15;
+	bra.uni 	$L__BB1_14;
 
-$L__BB2_8:
-$L__tmp53:
-	.loc	5 145 6
-	mov.u64 	%rd33, d_table;
-	cvta.const.u64 	%rd34, %rd33;
-	ld.u64 	%rd35, [%rd34];
-	ld.u64 	%rd36, [%rd35];
-	st.u64 	[%rd36], %rd5;
-	bra.uni 	$L__BB2_9;
+$L__BB1_14:
+$L__tmp37:
+	.loc	5 52 4
+	mov.u64 	%rd21, d_table;
+	cvta.global.u64 	%rd22, %rd21;
+	ld.u64 	%rd23, [%rd22];
+	ld.u64 	%rd24, [%rd23];
+	st.u64 	[%rd24], %rd3;
+	.loc	5 53 4
+	ld.u64 	%rd25, [%rd22];
+	ld.u64 	%rd26, [%rd25];
+	st.u32 	[%rd26+8], %r3;
+	bra.uni 	$L__BB1_15;
+$L__tmp38:
 
-$L__BB2_9:
-	bra.uni 	$L__BB2_10;
-$L__tmp54:
+$L__BB1_15:
+	.loc	5 55 3
+	bra.uni 	$L__BB1_19;
+$L__tmp39:
 
-$L__BB2_10:
-	.loc	5 149 4
-	bra.uni 	$L__BB2_34;
-$L__tmp55:
-
-$L__BB2_11:
-	.loc	5 153 4
-	mov.u64 	%rd18, d_table;
-	cvta.const.u64 	%rd19, %rd18;
-	ld.u64 	%rd20, [%rd19];
-	ld.u64 	%rd21, [%rd20];
-	add.s64 	%rd22, %rd21, 12;
-	{ // callseq 7, 0
+$L__BB1_16:
+	.loc	5 58 2
+	mov.u64 	%rd7, d_table;
+	cvta.global.u64 	%rd8, %rd7;
+	ld.u64 	%rd9, [%rd8];
+	ld.u64 	%rd10, [%rd9];
+	add.s64 	%rd11, %rd10, 12;
+	.loc	5 58 19
+	{ // callseq 1, 0
 	.reg .b32 temp_param_reg;
 	.param .b64 param0;
-	st.param.b64 	[param0+0], %rd22;
+	st.param.b64 	[param0+0], %rd11;
 	.param .b32 param1;
 	st.param.b32 	[param1+0], 1;
 	.param .b32 retval0;
@@ -1710,309 +1727,34 @@ $L__BB2_11:
 	param1
 	);
 	ld.param.b32 	%r12, [retval0+0];
-$L__tmp56:
-	} // callseq 7
-	.loc	5 155 3
+$L__tmp40:
+	} // callseq 1
+	.loc	5 61 2
 	and.b32  	%r13, %r12, 1;
-	setp.eq.s32 	%p13, %r13, 0;
-	not.pred 	%p14, %p13;
-	@%p14 bra 	$L__BB2_13;
-	bra.uni 	$L__BB2_12;
+	setp.eq.s32 	%p7, %r13, 0;
+	not.pred 	%p8, %p7;
+	@%p8 bra 	$L__BB1_18;
+	bra.uni 	$L__BB1_17;
 
-$L__BB2_12:
-$L__tmp57:
-	.loc	5 156 4
-	mov.u64 	%rd23, d_table;
-	cvta.const.u64 	%rd24, %rd23;
-	ld.u64 	%rd25, [%rd24];
-	ld.u64 	%rd26, [%rd25];
-	st.u64 	[%rd26], %rd5;
-	bra.uni 	$L__BB2_13;
-$L__tmp58:
+$L__BB1_17:
+$L__tmp41:
+	.loc	5 62 3
+	mov.u64 	%rd12, d_table;
+	cvta.global.u64 	%rd13, %rd12;
+	ld.u64 	%rd14, [%rd13];
+	ld.u64 	%rd15, [%rd14];
+	st.u64 	[%rd15], %rd3;
+	bra.uni 	$L__BB1_18;
+$L__tmp42:
 
-$L__BB2_13:
-	.loc	5 159 3
-	bra.uni 	$L__BB2_34;
-$L__tmp59:
+$L__BB1_18:
+	.loc	5 65 1
+	bra.uni 	$L__BB1_19;
 
-$L__BB2_14:
-	.loc	5 161 1
-	bra.uni 	$L__BB2_15;
-
-$L__BB2_15:
-$L__tmp60:
-	.loc	5 163 2
-	mov.u16 	%rs7, 0;
-	mov.b16 	%rs1, %rs7;
-$L__tmp61:
-	.loc	5 164 2
-	mov.u32 	%r18, -1;
-	mov.b32 	%r1, %r18;
-$L__tmp62:
-	.loc	5 165 2
-	mov.u32 	%r19, 1;
-	mov.b32 	%r2, %r19;
-$L__tmp63:
-	mov.u16 	%rs10, %rs1;
-$L__tmp64:
-	mov.u32 	%r29, %r1;
-$L__tmp65:
-	mov.u32 	%r30, %r2;
-$L__tmp66:
-	bra.uni 	$L__BB2_16;
-
-$L__BB2_16:
-	mov.u32 	%r4, %r30;
-	mov.u32 	%r3, %r29;
-	mov.u16 	%rs2, %rs10;
-$L__tmp67:
-	mov.u64 	%rd37, d_table;
-$L__tmp68:
-	cvta.const.u64 	%rd38, %rd37;
-	ld.u64 	%rd39, [%rd38];
-	ld.u32 	%r20, [%rd39+8];
-	setp.lt.u32 	%p19, %r4, %r20;
-	not.pred 	%p20, %p19;
-	@%p20 bra 	$L__BB2_27;
-	bra.uni 	$L__BB2_17;
-
-$L__BB2_17:
-$L__tmp69:
-	.loc	5 166 3
-	mov.u64 	%rd60, d_table;
-	cvta.const.u64 	%rd61, %rd60;
-	ld.u64 	%rd62, [%rd61];
-	ld.u64 	%rd63, [%rd62];
-	cvt.u64.u32 	%rd64, %r4;
-	mul.lo.s64 	%rd65, %rd64, 24;
-	add.s64 	%rd4, %rd63, %rd65;
-$L__tmp70:
-	.loc	5 168 3
-	ld.u64 	%rd66, [%rd4];
-	setp.le.u64 	%p28, %rd66, %rd5;
-	mov.pred 	%p27, 0;
-	not.pred 	%p29, %p28;
-	mov.pred 	%p36, %p27;
-	@%p29 bra 	$L__BB2_19;
-	bra.uni 	$L__BB2_18;
-
-$L__BB2_18:
-	.loc	5 169 7
-	ld.u64 	%rd67, [%rd4];
-	ld.u32 	%r25, [%rd4+8];
-	cvt.u64.u32 	%rd68, %r25;
-	add.s64 	%rd69, %rd67, %rd68;
-	setp.lt.u64 	%p3, %rd5, %rd69;
-	mov.pred 	%p36, %p3;
-	bra.uni 	$L__BB2_19;
-
-$L__BB2_19:
-	mov.pred 	%p4, %p36;
-	not.pred 	%p30, %p4;
-	mov.u16 	%rs12, %rs2;
-$L__tmp71:
-	mov.u32 	%r32, %r3;
-$L__tmp72:
-	@%p30 bra 	$L__BB2_25;
-	bra.uni 	$L__BB2_20;
-
-$L__BB2_20:
-$L__tmp73:
-	.loc	5 171 4
-	ld.u32 	%r26, [%rd4+12];
-	setp.eq.s32 	%p31, %r26, 0;
-	not.pred 	%p32, %p31;
-	@%p32 bra 	$L__BB2_22;
-	bra.uni 	$L__BB2_21;
-
-$L__BB2_21:
-$L__tmp74:
-	.loc	5 172 5
-	bra.uni 	$L__BB2_34;
-$L__tmp75:
-
-$L__BB2_22:
-	.loc	5 175 4
-	ld.u32 	%r27, [%rd4+12];
-	.loc	5 176 8
-	and.b32  	%r28, %r27, 2;
-	setp.ne.s32 	%p33, %r28, 0;
-	not.pred 	%p34, %p33;
-	mov.u16 	%rs11, %rs2;
-$L__tmp76:
-	mov.u32 	%r31, %r3;
-$L__tmp77:
-	@%p34 bra 	$L__BB2_24;
-	bra.uni 	$L__BB2_23;
-
-$L__BB2_23:
-$L__tmp78:
-	.loc	5 177 5
-	mov.u16 	%rs9, 1;
-	mov.b16 	%rs3, %rs9;
-$L__tmp79:
-	.loc	5 178 5
-	mov.b32 	%r5, %r4;
-$L__tmp80:
-	mov.u16 	%rs11, %rs3;
-$L__tmp81:
-	mov.u32 	%r31, %r5;
-$L__tmp82:
-	bra.uni 	$L__BB2_24;
-
-$L__BB2_24:
-	mov.u32 	%r6, %r31;
-	mov.u16 	%rs4, %rs11;
-$L__tmp83:
-	mov.u16 	%rs12, %rs4;
-$L__tmp84:
-	mov.u32 	%r32, %r6;
-$L__tmp85:
-	bra.uni 	$L__BB2_25;
-$L__tmp86:
-
-$L__BB2_25:
-	.loc	5 165 48
-	mov.u32 	%r7, %r32;
-	mov.u16 	%rs5, %rs12;
-$L__tmp87:
-	bra.uni 	$L__BB2_26;
-
-$L__BB2_26:
-	add.s32 	%r8, %r4, 1;
-$L__tmp88:
-	mov.u16 	%rs10, %rs5;
-$L__tmp89:
-	mov.u32 	%r29, %r7;
-$L__tmp90:
-	mov.u32 	%r30, %r8;
-$L__tmp91:
-	bra.uni 	$L__BB2_16;
-$L__tmp92:
-
-$L__BB2_27:
-	.loc	5 183 2
-	and.b16  	%rs8, %rs2, 255;
-	setp.ne.s16 	%p21, %rs8, 0;
-	not.pred 	%p22, %p21;
-	@%p22 bra 	$L__BB2_31;
-	bra.uni 	$L__BB2_28;
-
-$L__BB2_28:
-$L__tmp93:
-	.loc	5 184 3
-	mov.u64 	%rd49, d_table;
-	cvta.const.u64 	%rd50, %rd49;
-	ld.u64 	%rd51, [%rd50];
-	ld.u64 	%rd52, [%rd51];
-	add.s64 	%rd53, %rd52, 12;
-	.loc	5 184 20
-	{ // callseq 10, 0
-	.reg .b32 temp_param_reg;
-	.param .b64 param0;
-	st.param.b64 	[param0+0], %rd53;
-	.param .b32 param1;
-	st.param.b32 	[param1+0], 2;
-	.param .b32 retval0;
-	call.uni (retval0),
-	_ZN42_INTERNAL_6da04a83_12_safecache_cu_d_table8atomicOrEPjj,
-	(
-	param0,
-	param1
-	);
-	ld.param.b32 	%r23, [retval0+0];
-$L__tmp94:
-	} // callseq 10
-	.loc	5 186 3
-	and.b32  	%r24, %r23, 2;
-	setp.eq.s32 	%p25, %r24, 0;
-	not.pred 	%p26, %p25;
-	@%p26 bra 	$L__BB2_30;
-	bra.uni 	$L__BB2_29;
-
-$L__BB2_29:
-$L__tmp95:
-	.loc	5 187 4
-	mov.u64 	%rd54, d_table;
-	cvta.const.u64 	%rd55, %rd54;
-	ld.u64 	%rd56, [%rd55];
-	ld.u64 	%rd57, [%rd56];
-	st.u64 	[%rd57], %rd5;
-	.loc	5 188 4
-	ld.u64 	%rd58, [%rd55];
-	ld.u64 	%rd59, [%rd58];
-	st.u32 	[%rd59+8], %r3;
-	bra.uni 	$L__BB2_30;
-$L__tmp96:
-
-$L__BB2_30:
-	.loc	5 191 3
-	bra.uni 	$L__BB2_34;
-$L__tmp97:
-
-$L__BB2_31:
-	.loc	5 194 2
-	mov.u64 	%rd40, d_table;
-	cvta.const.u64 	%rd41, %rd40;
-	ld.u64 	%rd42, [%rd41];
-	ld.u64 	%rd43, [%rd42];
-	add.s64 	%rd44, %rd43, 12;
-	.loc	5 194 19
-	{ // callseq 9, 0
-	.reg .b32 temp_param_reg;
-	.param .b64 param0;
-	st.param.b64 	[param0+0], %rd44;
-	.param .b32 param1;
-	st.param.b32 	[param1+0], 1;
-	.param .b32 retval0;
-	call.uni (retval0),
-	_ZN42_INTERNAL_6da04a83_12_safecache_cu_d_table8atomicOrEPjj,
-	(
-	param0,
-	param1
-	);
-	ld.param.b32 	%r21, [retval0+0];
-$L__tmp98:
-	} // callseq 9
-	.loc	5 197 2
-	and.b32  	%r22, %r21, 1;
-	setp.eq.s32 	%p23, %r22, 0;
-	not.pred 	%p24, %p23;
-	@%p24 bra 	$L__BB2_33;
-	bra.uni 	$L__BB2_32;
-
-$L__BB2_32:
-$L__tmp99:
-	.loc	5 198 3
-	mov.u64 	%rd45, d_table;
-	cvta.const.u64 	%rd46, %rd45;
-	ld.u64 	%rd47, [%rd46];
-	ld.u64 	%rd48, [%rd47];
-	st.u64 	[%rd48], %rd5;
-	bra.uni 	$L__BB2_33;
-$L__tmp100:
-
-$L__BB2_33:
-	.loc	5 201 1
-	bra.uni 	$L__BB2_34;
-
-$L__BB2_34:
+$L__BB1_19:
 	ret;
-$L__tmp101:
-$L__func_end2:
-
-}
-
-.func __trap()
-{
-
-
-
-	// begin inline asm
-	trap;
-	// end inline asm
-	ret;
-$L__func_end3:
+$L__tmp43:
+$L__func_end1:
 
 }
 .func  (.param .b32 func_retval0) __uAtomicOr(
@@ -2029,7 +1771,7 @@ $L__func_end3:
 	atom.or.b32 	%r2, [%rd1], %r1;
 	st.param.b32 	[func_retval0+0], %r2;
 	ret;
-$L__func_end4:
+$L__func_end2:
 
 }
 	.file	1 "/usr/include/stdint.h"
@@ -2041,8 +1783,8 @@ $L__func_end4:
 	.file	7 "/usr/local/cuda/bin/../targets/x86_64-linux/include/device_atomic_functions.hpp"
 	.section	.debug_loc
 	{
-.b64 $L__tmp4
-.b64 $L__tmp7
+.b64 $L__tmp3
+.b64 $L__tmp6
 .b8 6
 .b8 0
 .b8 144
@@ -2051,8 +1793,8 @@ $L__func_end4:
 .b8 201
 .b8 171
 .b8 2
-.b64 $L__tmp7
-.b64 $L__tmp11
+.b64 $L__tmp6
+.b64 $L__tmp10
 .b8 6
 .b8 0
 .b8 144
@@ -2061,8 +1803,8 @@ $L__func_end4:
 .b8 201
 .b8 171
 .b8 2
-.b64 $L__tmp11
-.b64 $L__tmp14
+.b64 $L__tmp10
+.b64 $L__tmp13
 .b8 6
 .b8 0
 .b8 144
@@ -2071,8 +1813,8 @@ $L__func_end4:
 .b8 201
 .b8 171
 .b8 2
-.b64 $L__tmp14
-.b64 $L__tmp19
+.b64 $L__tmp13
+.b64 $L__tmp18
 .b8 7
 .b8 0
 .b8 144
@@ -2082,8 +1824,8 @@ $L__func_end4:
 .b8 147
 .b8 215
 .b8 4
-.b64 $L__tmp19
-.b64 $L__tmp22
+.b64 $L__tmp18
+.b64 $L__tmp21
 .b8 7
 .b8 0
 .b8 144
@@ -2093,8 +1835,8 @@ $L__func_end4:
 .b8 147
 .b8 215
 .b8 4
-.b64 $L__tmp22
-.b64 $L__tmp24
+.b64 $L__tmp21
+.b64 $L__tmp23
 .b8 6
 .b8 0
 .b8 144
@@ -2103,8 +1845,8 @@ $L__func_end4:
 .b8 201
 .b8 171
 .b8 2
-.b64 $L__tmp24
-.b64 $L__tmp26
+.b64 $L__tmp23
+.b64 $L__tmp25
 .b8 7
 .b8 0
 .b8 144
@@ -2114,8 +1856,8 @@ $L__func_end4:
 .b8 147
 .b8 215
 .b8 4
+.b64 $L__tmp25
 .b64 $L__tmp26
-.b64 $L__tmp27
 .b8 6
 .b8 0
 .b8 144
@@ -2124,8 +1866,8 @@ $L__func_end4:
 .b8 201
 .b8 171
 .b8 2
-.b64 $L__tmp27
-.b64 $L__tmp30
+.b64 $L__tmp26
+.b64 $L__tmp29
 .b8 7
 .b8 0
 .b8 144
@@ -2135,8 +1877,8 @@ $L__func_end4:
 .b8 147
 .b8 215
 .b8 4
-.b64 $L__tmp30
-.b64 $L__tmp32
+.b64 $L__tmp29
+.b64 $L__tmp31
 .b8 6
 .b8 0
 .b8 144
@@ -2145,7 +1887,7 @@ $L__func_end4:
 .b8 201
 .b8 171
 .b8 2
-.b64 $L__tmp32
+.b64 $L__tmp31
 .b64 $L__func_end1
 .b8 6
 .b8 0
@@ -2153,6 +1895,113 @@ $L__func_end4:
 .b8 185
 .b8 230
 .b8 201
+.b8 171
+.b8 2
+.b64 0
+.b64 0
+.b64 $L__tmp4
+.b64 $L__tmp7
+.b8 5
+.b8 0
+.b8 144
+.b8 177
+.b8 228
+.b8 149
+.b8 1
+.b64 $L__tmp7
+.b64 $L__tmp9
+.b8 6
+.b8 0
+.b8 144
+.b8 176
+.b8 228
+.b8 200
+.b8 171
+.b8 2
+.b64 $L__tmp9
+.b64 $L__tmp14
+.b8 5
+.b8 0
+.b8 144
+.b8 179
+.b8 228
+.b8 149
+.b8 1
+.b64 $L__tmp14
+.b64 $L__tmp19
+.b8 6
+.b8 0
+.b8 144
+.b8 179
+.b8 228
+.b8 200
+.b8 171
+.b8 2
+.b64 $L__tmp19
+.b64 $L__tmp22
+.b8 6
+.b8 0
+.b8 144
+.b8 178
+.b8 228
+.b8 200
+.b8 171
+.b8 2
+.b64 $L__tmp22
+.b64 $L__tmp24
+.b8 5
+.b8 0
+.b8 144
+.b8 181
+.b8 228
+.b8 149
+.b8 1
+.b64 $L__tmp24
+.b64 $L__tmp25
+.b8 6
+.b8 0
+.b8 144
+.b8 178
+.b8 228
+.b8 200
+.b8 171
+.b8 2
+.b64 $L__tmp25
+.b64 $L__tmp27
+.b8 5
+.b8 0
+.b8 144
+.b8 182
+.b8 228
+.b8 149
+.b8 1
+.b64 $L__tmp27
+.b64 $L__tmp29
+.b8 6
+.b8 0
+.b8 144
+.b8 179
+.b8 228
+.b8 200
+.b8 171
+.b8 2
+.b64 $L__tmp29
+.b64 $L__tmp32
+.b8 5
+.b8 0
+.b8 144
+.b8 183
+.b8 228
+.b8 149
+.b8 1
+.b64 $L__tmp32
+.b64 $L__func_end1
+.b8 6
+.b8 0
+.b8 144
+.b8 176
+.b8 228
+.b8 200
 .b8 171
 .b8 2
 .b64 0
@@ -2162,7 +2011,7 @@ $L__func_end4:
 .b8 5
 .b8 0
 .b8 144
-.b8 177
+.b8 178
 .b8 228
 .b8 149
 .b8 1
@@ -2177,78 +2026,20 @@ $L__func_end4:
 .b8 171
 .b8 2
 .b64 $L__tmp10
-.b64 $L__tmp15
-.b8 5
-.b8 0
-.b8 144
-.b8 179
-.b8 228
-.b8 149
-.b8 1
-.b64 $L__tmp15
-.b64 $L__tmp20
-.b8 6
-.b8 0
-.b8 144
-.b8 180
-.b8 228
-.b8 200
-.b8 171
-.b8 2
-.b64 $L__tmp20
-.b64 $L__tmp23
-.b8 6
-.b8 0
-.b8 144
-.b8 179
-.b8 228
-.b8 200
-.b8 171
-.b8 2
-.b64 $L__tmp23
-.b64 $L__tmp25
-.b8 5
-.b8 0
-.b8 144
-.b8 181
-.b8 228
-.b8 149
-.b8 1
-.b64 $L__tmp25
-.b64 $L__tmp26
-.b8 6
-.b8 0
-.b8 144
-.b8 179
-.b8 228
-.b8 200
-.b8 171
-.b8 2
-.b64 $L__tmp26
-.b64 $L__tmp28
-.b8 5
-.b8 0
-.b8 144
-.b8 182
-.b8 228
-.b8 149
-.b8 1
-.b64 $L__tmp28
 .b64 $L__tmp30
-.b8 6
+.b8 5
 .b8 0
 .b8 144
 .b8 180
 .b8 228
-.b8 200
-.b8 171
-.b8 2
+.b8 149
+.b8 1
 .b64 $L__tmp30
 .b64 $L__tmp33
 .b8 5
 .b8 0
 .b8 144
-.b8 183
+.b8 184
 .b8 228
 .b8 149
 .b8 1
@@ -2259,329 +2050,6 @@ $L__func_end4:
 .b8 144
 .b8 177
 .b8 228
-.b8 200
-.b8 171
-.b8 2
-.b64 0
-.b64 0
-.b64 $L__tmp6
-.b64 $L__tmp9
-.b8 5
-.b8 0
-.b8 144
-.b8 178
-.b8 228
-.b8 149
-.b8 1
-.b64 $L__tmp9
-.b64 $L__tmp11
-.b8 6
-.b8 0
-.b8 144
-.b8 178
-.b8 228
-.b8 200
-.b8 171
-.b8 2
-.b64 $L__tmp11
-.b64 $L__tmp31
-.b8 5
-.b8 0
-.b8 144
-.b8 180
-.b8 228
-.b8 149
-.b8 1
-.b64 $L__tmp31
-.b64 $L__tmp34
-.b8 5
-.b8 0
-.b8 144
-.b8 184
-.b8 228
-.b8 149
-.b8 1
-.b64 $L__tmp34
-.b64 $L__func_end1
-.b8 6
-.b8 0
-.b8 144
-.b8 178
-.b8 228
-.b8 200
-.b8 171
-.b8 2
-.b64 0
-.b64 0
-.b64 $L__tmp61
-.b64 $L__tmp64
-.b8 6
-.b8 0
-.b8 144
-.b8 177
-.b8 230
-.b8 201
-.b8 171
-.b8 2
-.b64 $L__tmp64
-.b64 $L__tmp68
-.b8 7
-.b8 0
-.b8 144
-.b8 176
-.b8 226
-.b8 204
-.b8 147
-.b8 215
-.b8 4
-.b64 $L__tmp68
-.b64 $L__tmp71
-.b8 6
-.b8 0
-.b8 144
-.b8 178
-.b8 230
-.b8 201
-.b8 171
-.b8 2
-.b64 $L__tmp71
-.b64 $L__tmp76
-.b8 7
-.b8 0
-.b8 144
-.b8 178
-.b8 226
-.b8 204
-.b8 147
-.b8 215
-.b8 4
-.b64 $L__tmp76
-.b64 $L__tmp79
-.b8 7
-.b8 0
-.b8 144
-.b8 177
-.b8 226
-.b8 204
-.b8 147
-.b8 215
-.b8 4
-.b64 $L__tmp79
-.b64 $L__tmp81
-.b8 6
-.b8 0
-.b8 144
-.b8 179
-.b8 230
-.b8 201
-.b8 171
-.b8 2
-.b64 $L__tmp81
-.b64 $L__tmp83
-.b8 7
-.b8 0
-.b8 144
-.b8 177
-.b8 226
-.b8 204
-.b8 147
-.b8 215
-.b8 4
-.b64 $L__tmp83
-.b64 $L__tmp84
-.b8 6
-.b8 0
-.b8 144
-.b8 180
-.b8 230
-.b8 201
-.b8 171
-.b8 2
-.b64 $L__tmp84
-.b64 $L__tmp87
-.b8 7
-.b8 0
-.b8 144
-.b8 178
-.b8 226
-.b8 204
-.b8 147
-.b8 215
-.b8 4
-.b64 $L__tmp87
-.b64 $L__tmp89
-.b8 6
-.b8 0
-.b8 144
-.b8 181
-.b8 230
-.b8 201
-.b8 171
-.b8 2
-.b64 $L__tmp89
-.b64 $L__func_end2
-.b8 7
-.b8 0
-.b8 144
-.b8 176
-.b8 226
-.b8 204
-.b8 147
-.b8 215
-.b8 4
-.b64 0
-.b64 0
-.b64 $L__tmp62
-.b64 $L__tmp65
-.b8 5
-.b8 0
-.b8 144
-.b8 177
-.b8 228
-.b8 149
-.b8 1
-.b64 $L__tmp65
-.b64 $L__tmp67
-.b8 6
-.b8 0
-.b8 144
-.b8 185
-.b8 228
-.b8 200
-.b8 171
-.b8 2
-.b64 $L__tmp67
-.b64 $L__tmp72
-.b8 5
-.b8 0
-.b8 144
-.b8 179
-.b8 228
-.b8 149
-.b8 1
-.b64 $L__tmp72
-.b64 $L__tmp77
-.b8 6
-.b8 0
-.b8 144
-.b8 178
-.b8 230
-.b8 200
-.b8 171
-.b8 2
-.b64 $L__tmp77
-.b64 $L__tmp80
-.b8 6
-.b8 0
-.b8 144
-.b8 177
-.b8 230
-.b8 200
-.b8 171
-.b8 2
-.b64 $L__tmp80
-.b64 $L__tmp82
-.b8 5
-.b8 0
-.b8 144
-.b8 181
-.b8 228
-.b8 149
-.b8 1
-.b64 $L__tmp82
-.b64 $L__tmp83
-.b8 6
-.b8 0
-.b8 144
-.b8 177
-.b8 230
-.b8 200
-.b8 171
-.b8 2
-.b64 $L__tmp83
-.b64 $L__tmp85
-.b8 5
-.b8 0
-.b8 144
-.b8 182
-.b8 228
-.b8 149
-.b8 1
-.b64 $L__tmp85
-.b64 $L__tmp87
-.b8 6
-.b8 0
-.b8 144
-.b8 178
-.b8 230
-.b8 200
-.b8 171
-.b8 2
-.b64 $L__tmp87
-.b64 $L__tmp90
-.b8 5
-.b8 0
-.b8 144
-.b8 183
-.b8 228
-.b8 149
-.b8 1
-.b64 $L__tmp90
-.b64 $L__func_end2
-.b8 6
-.b8 0
-.b8 144
-.b8 185
-.b8 228
-.b8 200
-.b8 171
-.b8 2
-.b64 0
-.b64 0
-.b64 $L__tmp63
-.b64 $L__tmp66
-.b8 5
-.b8 0
-.b8 144
-.b8 178
-.b8 228
-.b8 149
-.b8 1
-.b64 $L__tmp66
-.b64 $L__tmp68
-.b8 6
-.b8 0
-.b8 144
-.b8 176
-.b8 230
-.b8 200
-.b8 171
-.b8 2
-.b64 $L__tmp68
-.b64 $L__tmp88
-.b8 5
-.b8 0
-.b8 144
-.b8 180
-.b8 228
-.b8 149
-.b8 1
-.b64 $L__tmp88
-.b64 $L__tmp91
-.b8 5
-.b8 0
-.b8 144
-.b8 184
-.b8 228
-.b8 149
-.b8 1
-.b64 $L__tmp91
-.b64 $L__func_end2
-.b8 6
-.b8 0
-.b8 144
-.b8 176
-.b8 230
 .b8 200
 .b8 171
 .b8 2
@@ -2690,33 +2158,6 @@ $L__func_end4:
 .b8 0
 .b8 0
 .b8 8
-.b8 1
-.b8 1
-.b8 73
-.b8 19
-.b8 0
-.b8 0
-.b8 9
-.b8 33
-.b8 0
-.b8 73
-.b8 19
-.b8 55
-.b8 11
-.b8 0
-.b8 0
-.b8 10
-.b8 36
-.b8 0
-.b8 3
-.b8 8
-.b8 11
-.b8 11
-.b8 62
-.b8 11
-.b8 0
-.b8 0
-.b8 11
 .b8 46
 .b8 1
 .b8 17
@@ -2737,7 +2178,7 @@ $L__func_end4:
 .b8 19
 .b8 0
 .b8 0
-.b8 12
+.b8 9
 .b8 5
 .b8 0
 .b8 2
@@ -2754,7 +2195,7 @@ $L__func_end4:
 .b8 19
 .b8 0
 .b8 0
-.b8 13
+.b8 10
 .b8 46
 .b8 1
 .b8 17
@@ -2777,7 +2218,7 @@ $L__func_end4:
 .b8 12
 .b8 0
 .b8 0
-.b8 14
+.b8 11
 .b8 11
 .b8 1
 .b8 17
@@ -2786,24 +2227,7 @@ $L__func_end4:
 .b8 1
 .b8 0
 .b8 0
-.b8 15
-.b8 52
-.b8 0
-.b8 51
-.b8 11
-.b8 2
-.b8 10
-.b8 3
-.b8 8
-.b8 58
-.b8 11
-.b8 59
-.b8 11
-.b8 73
-.b8 19
-.b8 0
-.b8 0
-.b8 16
+.b8 12
 .b8 52
 .b8 0
 .b8 2
@@ -2820,7 +2244,7 @@ $L__func_end4:
 .b8 19
 .b8 0
 .b8 0
-.b8 17
+.b8 13
 .b8 52
 .b8 0
 .b8 2
@@ -2835,14 +2259,14 @@ $L__func_end4:
 .b8 19
 .b8 0
 .b8 0
-.b8 18
+.b8 14
 .b8 59
 .b8 0
 .b8 3
 .b8 8
 .b8 0
 .b8 0
-.b8 19
+.b8 15
 .b8 38
 .b8 0
 .b8 73
@@ -2853,7 +2277,7 @@ $L__func_end4:
 	}
 	.section	.debug_info
 	{
-.b32 1711
+.b32 974
 .b8 2
 .b8 0
 .b32 .debug_abbrev
@@ -2876,8 +2300,8 @@ $L__func_end4:
 .b32 148
 .b8 1
 .b8 5
-.b8 25
-.b8 4
+.b8 23
+.b8 5
 .b8 9
 .b8 3
 .b64 d_table
@@ -2994,105 +2418,8 @@ $L__func_end4:
 .b8 0
 .b8 7
 .b8 4
-.b8 2
-.b8 70,82,69,69,68,95,77,69,77,95,68,69,86
-.b8 0
-.b32 500
-.b8 1
-.b8 5
-.b8 26
-.b8 5
-.b8 9
-.b8 3
-.b64 FREED_MEM_DEV
-.b8 70,82,69,69,68,95,77,69,77,95,68,69,86
-.b8 0
-.b8 7
-.b8 98,111,111,108
-.b8 0
-.b8 2
-.b8 1
 .b8 6
-.b32 526
-.b8 95,95,117,105,110,116,49,54,95,116
-.b8 0
-.b8 3
-.b8 40
-.b8 7
-.b8 117,110,115,105,103,110,101,100,32,115,104,111,114,116
-.b8 0
-.b8 7
-.b8 2
-.b8 6
-.b32 508
-.b8 117,105,110,116,49,54,95,116
-.b8 0
-.b8 4
-.b8 25
-.b8 6
-.b32 577
-.b8 95,95,117,105,110,116,56,95,116
-.b8 0
-.b8 3
-.b8 38
-.b8 7
-.b8 117,110,115,105,103,110,101,100,32,99,104,97,114
-.b8 0
-.b8 8
-.b8 1
-.b8 6
-.b32 560
-.b8 117,105,110,116,56,95,116
-.b8 0
-.b8 4
-.b8 24
-.b8 4
-.b8 95,90,78,56,115,97,102,101,99,117,100,97,54,109,101,109,111,114,121,56,77,101,116,97,100,97,116,97,69
-.b8 0
-.b8 16
-.b8 2
-.b8 37
-.b8 5
-.b8 109,97,103,105,99
-.b8 0
-.b32 544
-.b8 2
-.b8 38
-.b8 2
-.b8 35
-.b8 0
-.b8 5
-.b8 112,97,100,100,105,110,103
-.b8 0
-.b32 694
-.b8 2
-.b8 39
-.b8 2
-.b8 35
-.b8 2
-.b8 5
-.b8 101,110,116,114,121
-.b8 0
-.b32 253
-.b8 2
-.b8 40
-.b8 2
-.b8 35
-.b8 8
-.b8 0
-.b8 8
-.b32 594
-.b8 9
-.b32 706
-.b8 6
-.b8 0
-.b8 10
-.b8 95,95,65,82,82,65,89,95,83,73,90,69,95,84,89,80,69,95,95
-.b8 0
-.b8 8
-.b8 7
-.b8 6
-.b32 746
+.b32 470
 .b8 95,95,105,110,116,51,50,95,116
 .b8 0
 .b8 3
@@ -3103,12 +2430,12 @@ $L__func_end4:
 .b8 5
 .b8 4
 .b8 6
-.b32 729
+.b32 453
 .b8 105,110,116,51,50,95,116
 .b8 0
 .b8 6
 .b8 26
-.b8 11
+.b8 8
 .b64 $L__func_begin0
 .b64 $L__func_end0
 .b8 1
@@ -3121,7 +2448,7 @@ $L__func_end4:
 .b8 7
 .b8 185
 .b32 437
-.b8 12
+.b8 9
 .b8 6
 .b8 144
 .b8 177
@@ -3134,8 +2461,8 @@ $L__func_end4:
 .b8 0
 .b8 7
 .b8 185
-.b32 1672
-.b8 12
+.b32 941
+.b8 9
 .b8 5
 .b8 144
 .b8 177
@@ -3149,20 +2476,20 @@ $L__func_end4:
 .b8 185
 .b32 437
 .b8 0
-.b8 13
+.b8 10
 .b64 $L__func_begin1
 .b64 $L__func_end1
 .b8 1
 .b8 156
-.b8 95,95,98,111,117,110,100,115,95,99,104,101,99,107,95,115,97,102,101,99,117,100,97
+.b8 95,95,98,111,117,110,100,115,95,99,104,101,99,107,95,115,97,102,101,99,117,100,97,95,110,111,95,116,114,97,112
 .b8 0
-.b8 95,95,98,111,117,110,100,115,95,99,104,101,99,107,95,115,97,102,101,99,117,100,97
+.b8 95,95,98,111,117,110,100,115,95,99,104,101,99,107,95,115,97,102,101,99,117,100,97,95,110,111,95,116,114,97,112
 .b8 0
 .b8 5
-.b8 35
-.b32 1666
+.b8 25
+.b32 935
 .b8 1
-.b8 12
+.b8 9
 .b8 6
 .b8 144
 .b8 179
@@ -3174,24 +2501,12 @@ $L__func_end4:
 .b8 112,116,114
 .b8 0
 .b8 5
-.b8 35
-.b32 1695
-.b8 14
-.b64 $L__tmp2
-.b64 $L__tmp44
-.b8 15
-.b8 6
+.b8 25
+.b32 950
 .b8 11
-.b8 3
-.b64 __local_depot1
-.b8 35
-.b8 0
-.b8 109,101,116,97
-.b8 0
-.b8 5
-.b8 38
-.b32 1681
-.b8 16
+.b64 $L__tmp2
+.b64 $L__tmp43
+.b8 12
 .b8 6
 .b8 144
 .b8 179
@@ -3203,26 +2518,26 @@ $L__func_end4:
 .b8 97,100,100,114
 .b8 0
 .b8 5
-.b8 77
-.b32 1704
-.b8 17
+.b8 27
+.b32 959
+.b8 13
 .b32 .debug_loc
 .b8 102,114,101,101,100
 .b8 0
 .b8 5
-.b8 78
-.b32 500
-.b8 17
+.b8 28
+.b32 964
+.b8 13
 .b32 .debug_loc+284
 .b8 105,100,120
 .b8 0
 .b8 5
-.b8 79
-.b32 753
-.b8 16
+.b8 29
+.b32 477
+.b8 12
 .b8 6
 .b8 144
-.b8 179
+.b8 178
 .b8 226
 .b8 200
 .b8 171
@@ -3231,242 +2546,45 @@ $L__func_end4:
 .b8 111,108,100
 .b8 0
 .b8 5
-.b8 109
-.b32 1709
-.b8 14
-.b64 $L__tmp5
-.b64 $L__tmp35
-.b8 17
+.b8 58
+.b32 972
+.b8 11
+.b64 $L__tmp4
+.b64 $L__tmp34
+.b8 13
 .b32 .debug_loc+559
 .b8 105
 .b8 0
 .b8 5
-.b8 81
+.b8 31
 .b32 403
-.b8 14
-.b64 $L__tmp12
-.b64 $L__tmp29
-.b8 16
-.b8 6
-.b8 144
-.b8 178
-.b8 200
-.b8 201
-.b8 171
-.b8 2
-.b8 2
-.b8 101,110,116,114,121
-.b8 0
-.b8 5
-.b8 82
-.b32 253
-.b8 0
-.b8 0
-.b8 14
-.b64 $L__tmp36
-.b64 $L__tmp40
-.b8 16
-.b8 6
-.b8 144
-.b8 181
-.b8 226
-.b8 200
-.b8 171
-.b8 2
-.b8 2
-.b8 111,108,100
-.b8 0
-.b8 5
-.b8 99
-.b32 1709
-.b8 0
-.b8 0
-.b8 0
-.b8 13
-.b64 $L__func_begin2
-.b64 $L__func_end2
-.b8 1
-.b8 156
-.b8 95,95,98,111,117,110,100,115,95,99,104,101,99,107,95,115,97,102,101,99,117,100,97,95,110,111,95,116,114,97,112
-.b8 0
-.b8 95,95,98,111,117,110,100,115,95,99,104,101,99,107,95,115,97,102,101,99,117,100,97,95,110,111,95,116,114,97,112
-.b8 0
-.b8 5
-.b8 120
-.b32 1666
-.b8 1
+.b8 11
+.b64 $L__tmp11
+.b64 $L__tmp28
 .b8 12
 .b8 6
 .b8 144
-.b8 181
+.b8 178
 .b8 200
 .b8 201
 .b8 171
 .b8 2
 .b8 2
-.b8 112,116,114
-.b8 0
-.b8 5
-.b8 120
-.b32 1695
-.b8 14
-.b64 $L__tmp45
-.b64 $L__tmp101
-.b8 16
-.b8 6
-.b8 144
-.b8 177
-.b8 200
-.b8 201
-.b8 171
-.b8 2
-.b8 2
-.b8 109,101,116,97
-.b8 0
-.b8 5
-.b8 123
-.b32 1681
-.b8 16
-.b8 6
-.b8 144
-.b8 181
-.b8 200
-.b8 201
-.b8 171
-.b8 2
-.b8 2
-.b8 97,100,100,114
-.b8 0
-.b8 5
-.b8 162
-.b32 1704
-.b8 17
-.b32 .debug_loc+692
-.b8 102,114,101,101,100
-.b8 0
-.b8 5
-.b8 163
-.b32 500
-.b8 17
-.b32 .debug_loc+978
-.b8 105,100,120
-.b8 0
-.b8 5
-.b8 164
-.b32 753
-.b8 16
-.b8 6
-.b8 144
-.b8 177
-.b8 228
-.b8 200
-.b8 171
-.b8 2
-.b8 2
-.b8 111,108,100
-.b8 0
-.b8 5
-.b8 194
-.b32 1709
-.b8 14
-.b64 $L__tmp47
-.b64 $L__tmp59
-.b8 15
-.b8 6
-.b8 11
-.b8 3
-.b64 __local_depot2
-.b8 35
-.b8 0
 .b8 101,110,116,114,121
 .b8 0
 .b8 5
-.b8 127
+.b8 32
 .b32 253
-.b8 16
-.b8 6
-.b8 144
-.b8 181
-.b8 200
-.b8 201
-.b8 171
-.b8 2
-.b8 2
-.b8 97,100,100,114
-.b8 0
-.b8 5
-.b8 132
-.b32 1704
-.b8 16
-.b8 6
-.b8 144
-.b8 178
-.b8 226
-.b8 200
-.b8 171
-.b8 2
-.b8 2
-.b8 111,108,100
-.b8 0
-.b8 5
-.b8 152
-.b32 1709
-.b8 14
-.b64 $L__tmp51
-.b64 $L__tmp54
-.b8 16
-.b8 6
-.b8 144
-.b8 182
-.b8 226
-.b8 200
-.b8 171
-.b8 2
-.b8 2
-.b8 111,108,100
-.b8 0
-.b8 5
-.b8 139
-.b32 1709
 .b8 0
 .b8 0
-.b8 14
-.b64 $L__tmp62
-.b64 $L__tmp92
-.b8 17
-.b32 .debug_loc+1253
-.b8 105
-.b8 0
-.b8 5
-.b8 165
-.b32 403
-.b8 14
-.b64 $L__tmp69
-.b64 $L__tmp86
-.b8 16
+.b8 11
+.b64 $L__tmp35
+.b64 $L__tmp39
+.b8 12
 .b8 6
 .b8 144
 .b8 180
-.b8 200
-.b8 201
-.b8 171
-.b8 2
-.b8 2
-.b8 101,110,116,114,121
-.b8 0
-.b8 5
-.b8 166
-.b32 253
-.b8 0
-.b8 0
-.b8 14
-.b64 $L__tmp93
-.b64 $L__tmp97
-.b8 16
-.b8 6
-.b8 144
-.b8 179
-.b8 228
+.b8 226
 .b8 200
 .b8 171
 .b8 2
@@ -3474,28 +2592,28 @@ $L__func_end4:
 .b8 111,108,100
 .b8 0
 .b8 5
-.b8 184
-.b32 1709
+.b8 49
+.b32 972
 .b8 0
 .b8 0
 .b8 0
-.b8 18
+.b8 14
 .b8 118,111,105,100
 .b8 0
 .b8 3
 .b32 437
 .b32 12
 .b8 3
-.b32 1690
+.b32 935
 .b32 12
-.b8 19
-.b32 609
-.b8 3
-.b32 1666
-.b32 12
-.b8 19
+.b8 15
 .b32 369
-.b8 19
+.b8 7
+.b8 98,111,111,108
+.b8 0
+.b8 2
+.b8 1
+.b8 15
 .b32 437
 .b8 0
 	}
@@ -3504,7 +2622,6 @@ $L__func_end4:
 .b8 0
 
 	}
-
 
 )ptx";
 

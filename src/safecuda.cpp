@@ -244,7 +244,7 @@ extern "C" cudaError_t cudaLaunchKernel(const void *func, dim3 gridDim,
 	if (!safecuda::real_cudaLaunchKernel)
 		safecuda::init_safecuda();
 
-	int numParams = 5;
+	int numParams = 7;
 	size_t size = (numParams + 1) * sizeof(void *);
 
 	void **newParams = (void **)alloca(size);
@@ -253,7 +253,9 @@ extern "C" cudaError_t cudaLaunchKernel(const void *func, dim3 gridDim,
 	newParams[2] = args[1];
 	newParams[3] = args[2];
 	newParams[4] = args[3];
-	newParams[5] = nullptr;
+	newParams[5] = args[4];
+	newParams[6] = args[5];
+	newParams[numParams] = nullptr;
 
 	return safecuda::real_cudaLaunchKernel(func, gridDim, blockDim,
 					       newParams, sharedMem, stream);

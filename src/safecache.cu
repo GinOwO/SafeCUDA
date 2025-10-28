@@ -20,13 +20,10 @@
 
 #include "safecache.cuh"
 
-#include <cstdio>
-
 extern "C" __device__ safecuda::memory::AllocationTable *d_table = nullptr;
 
 __device__ void __bounds_check_safecuda(void *ptr)
 {
-	printf("Here\n");
 	const auto addr = reinterpret_cast<std::uintptr_t>(ptr);
 	bool freed = false;
 	std::int32_t idx = -1;

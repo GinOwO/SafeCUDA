@@ -33,16 +33,6 @@
 namespace sf_nvcc = safecuda::tools::sf_nvcc;
 namespace fs = std::filesystem;
 
-static constexpr char safecuda_lib[] =
-#ifdef NDEBUG
-	"./cmake-build-Release/libsafecuda_device.a"
-#elif DEBUG
-	"./cmake-build-Debug/libsafecuda_device.a"
-#else
-	"/usr/local/lib/libsafecuda_device.a"
-#endif
-	;
-
 sf_nvcc::TemporaryFileManager::TemporaryFileManager(
 	const SafeCudaOptions &sf_opts)
 	: preserve_on_exit(sf_opts.enable_debug)
@@ -99,14 +89,10 @@ static bool is_variable_assignment(const std::string &str)
 	if (str.empty())
 		return false;
 
-	// Look for pattern: IDENTIFIER=...
-	// Variables are typically uppercase with underscores
 	size_t equals_pos = str.find('=');
 	if (equals_pos == std::string::npos || equals_pos == 0)
 		return false;
 
-	// Check if everything before '=' looks like a variable name
-	// (uppercase letters, underscores, numbers)
 	for (size_t i = 0; i < equals_pos; ++i) {
 		char c = str[i];
 		if (!std::isupper(c) && c != '_' && !std::isdigit(c)) {
@@ -158,15 +144,12 @@ void sf_nvcc::DryRunParser::parse(const std::string &dryrun_output)
 	std::string line;
 	size_t cmd_index = 0;
 
-	// Regex to extract PTX output paths from cicc commands
 	std::regex ptx_output_regex(R"ptx(-o\s+"?([^"\s]+\.ptx)"?)ptx");
 
 	while (std::getline(iss, line)) {
-		// Only process lines starting with #$ (actual commands)
 		if (line.empty() || !line.starts_with("#$"))
 			continue;
 
-		// Remove the "#$ " prefix to get the actual command
 		std::string command = line.substr(3);
 
 		if (command.starts_with("rm "))
@@ -200,7 +183,6 @@ void sf_nvcc::DryRunParser::parse(const std::string &dryrun_output)
 
 		commands.push_back(command);
 
-		// Check if this is a cicc command that generates PTX
 		if (command.find("cicc") != std::string::npos) {
 			std::smatch match;
 			if (std::regex_search(command, match,
@@ -233,7 +215,6 @@ std::vector<std::string> sf_nvcc::DryRunParser::get_post_ptx_commands(
 	std::vector<std::string> post_commands(
 		commands.begin() + ptx_stage_end_index, commands.end());
 
-	// Replace original PTX paths with modified PTX paths
 	for (auto &cmd : post_commands) {
 		for (const auto &[orig_ptx, modified_ptx] : modified_ptx_map) {
 			size_t pos = 0;
@@ -242,24 +223,6 @@ std::vector<std::string> sf_nvcc::DryRunParser::get_post_ptx_commands(
 				cmd.replace(pos, orig_ptx.length(),
 					    modified_ptx);
 				pos += modified_ptx.length();
-			}
-		}
-		if (cmd.find("nvlink") != std::string::npos) {
-			// Find position before "-lcudadevrt" to inject our library
-			size_t cudadevrt_pos = cmd.find("-lcudadevrt");
-			if (cudadevrt_pos != std::string::npos) {
-				// Check if SafeCUDA library exists
-				if (fs::exists(safecuda_lib)) {
-					cmd.insert(cudadevrt_pos,
-						   std::string(safecuda_lib) +
-							   " ");
-				} else {
-					std::cerr
-						<< ACOL(ACOL_Y, ACOL_BF)
-						<< "Warning: SafeCUDA device library not found at: "
-						<< safecuda_lib << ACOL_RESET()
-						<< "\n";
-				}
 			}
 		}
 	}
@@ -272,7 +235,6 @@ sf_nvcc::DryRunParser sf_nvcc::execute_dryrun(const NvccOptions &nvcc_opts,
 {
 	std::string dryrun_cmd = "nvcc -dryrun -lcudart";
 
-	// Add all nvcc arguments
 	for (const std::string &arg : nvcc_opts.nvcc_args) {
 		dryrun_cmd += " " + arg;
 	}
@@ -343,7 +305,6 @@ sf_nvcc::execute_pre_ptx_stage(const DryRunParser &parser,
 		}
 	}
 
-	// Collect generated PTX files
 	std::vector<fs::path> ptx_paths;
 	for (const auto &[ptx_file, _] : parser.ptx_files) {
 		fs::path ptx_path(ptx_file);
@@ -386,16 +347,6 @@ bool sf_nvcc::execute_post_ptx_stage(
 			std::cout << ACOL(ACOL_C, ACOL_DF)
 				  << "Executing: " << ACOL_RESET() << cmd
 				  << "\n";
-		}
-
-		// if (!cmd.starts_with("ptxas") &&
-		//     !cmd.starts_with("fatbinary")) {
-		// 	cmd += " -lcudart";
-		// }
-
-		if (cmd.find(op_path) != std::string::npos) {
-			cmd += " ";
-			cmd += safecuda_lib;
 		}
 
 		int ret = std::system(cmd.c_str());
