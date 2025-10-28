@@ -48,10 +48,6 @@ extern cudaMallocManaged_t real_cudaMallocManaged;
 extern cudaFree_t real_cudaFree;
 extern cudaDeviceSynchronize_t real_cudaDeviceSynchronize;
 extern cudaGetLastError_t real_cudaGetLastError;
-extern cudaConfigureCall_t real_cudaConfigureCall;
-extern cudaSetupArgument_t real_cudaSetupArgument;
-extern cudaLaunch_t real_cudaLaunch;
-extern cuLaunchKernel_t real_cuLaunchKernel;
 extern cudaLaunchKernel_t real_cudaLaunchKernel;
 
 void init_safecuda();

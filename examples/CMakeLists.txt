@@ -36,10 +36,7 @@ find_package(CUDAToolkit REQUIRED)
 
 add_executable(example
         example.cpp
-        kernel1.cu
-        kernel2.cu
-        montecarlo.cu
-        out_of_bounds.cu
+        kernel.cu
 )
 
 #target_compile_options(example PRIVATE

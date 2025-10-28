@@ -195,25 +195,21 @@ instrumentPTXFile(const fs::path &ptx_path,
 		}
 
 		if (current_line.contains(".entry")) {
+			output_file << current_line
+				    << ".param .u64 d_table_param,\n";
 			header = 1;
+			continue;
 		}
 
 		if (!(instruction_index < instructions.size() &&
 		      instructions[instruction_index].line_number ==
 			      static_cast<int64_t>(line_num))) {
-			if (header == 1 && current_line.starts_with(')')) {
-				header = 2;
-				output_file << ", .param .u64 d_table_param_2 "
-					    << current_line << "\n";
-				continue;
-			}
-
-			if (header == 2 && current_line.starts_with('{')) {
+			if (header == 1 && current_line.starts_with('{')) {
 				output_file
 					<< current_line
 					<< "\n.reg .b64 %rd_table;\nld.param.u64 %rd_table,"
-					   " [d_table_param_2];\nst.global.u64 [d_table], %rd_table;\n";
-				header = 3;
+					   " [d_table_param];\nst.global.u64 [d_table], %rd_table;\n";
+				header = -1;
 				continue;
 			}
 

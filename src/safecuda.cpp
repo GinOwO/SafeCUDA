@@ -31,10 +31,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <dlfcn.h>
-#include <iostream>
 #include <stdexcept>
-
-#include "safecache.cuh"
 
 static safecuda::memory::AllocationTable *h_table = nullptr;
 static safecuda::memory::AllocationTable *d_table_ptr = nullptr;
@@ -48,10 +45,6 @@ cudaMallocManaged_t real_cudaMallocManaged = nullptr;
 cudaFree_t real_cudaFree = nullptr;
 cudaDeviceSynchronize_t real_cudaDeviceSynchronize = nullptr;
 cudaGetLastError_t real_cudaGetLastError = nullptr;
-cudaConfigureCall_t real_cudaConfigureCall = nullptr;
-cudaSetupArgument_t real_cudaSetupArgument = nullptr;
-cudaLaunch_t real_cudaLaunch = nullptr;
-cuLaunchKernel_t real_cuLaunchKernel = nullptr;
 cudaLaunchKernel_t real_cudaLaunchKernel = nullptr;
 
 static void sync_table_to_device()
@@ -73,14 +66,6 @@ void init_safecuda()
 		dlsym(RTLD_NEXT, "cudaDeviceSynchronize"));
 	real_cudaGetLastError = reinterpret_cast<cudaGetLastError_t>(
 		dlsym(RTLD_NEXT, "cudaGetLastError"));
-	real_cudaConfigureCall = reinterpret_cast<cudaConfigureCall_t>(
-		dlsym(RTLD_NEXT, "cudaConfigureCall"));
-	real_cudaSetupArgument = reinterpret_cast<cudaSetupArgument_t>(
-		dlsym(RTLD_NEXT, "cudaSetupArgument"));
-	real_cudaLaunch =
-		reinterpret_cast<cudaLaunch_t>(dlsym(RTLD_NEXT, "cudaLaunch"));
-	real_cuLaunchKernel = reinterpret_cast<cuLaunchKernel_t>(
-		dlsym(RTLD_NEXT, "cuLaunchKernel"));
 	real_cudaLaunchKernel = reinterpret_cast<cudaLaunchKernel_t>(
 		dlsym(RTLD_NEXT, "cudaLaunchKernel"));
 
@@ -252,97 +237,24 @@ extern "C" cudaError_t cudaGetLastError()
 	return safecuda::real_cudaGetLastError();
 }
 
-thread_local size_t tls_arg_end = 0;
-
-extern "C" cudaError_t cudaConfigureCall(dim3 grid, dim3 block,
-					 size_t sharedMem, cudaStream_t stream)
-{
-	if (!safecuda::real_cudaConfigureCall)
-		safecuda::init_safecuda();
-	puts("in conf call");
-	tls_arg_end = 0;
-	return safecuda::real_cudaConfigureCall(grid, block, sharedMem, stream);
-}
-
-extern "C" cudaError_t cudaSetupArgument(const void *arg, size_t size,
-					 size_t offset)
-{
-	if (!safecuda::real_cudaConfigureCall)
-		safecuda::init_safecuda();
-	puts("in setup arg");
-	cudaError_t r = safecuda::real_cudaSetupArgument(arg, size, offset);
-	// update tracked end
-	size_t end = offset + size;
-	if (end > tls_arg_end)
-		tls_arg_end = end;
-	return r;
-}
-
-extern "C" cudaError_t cudaLaunch(const void *func)
-{
-	if (!safecuda::real_cudaConfigureCall)
-		safecuda::init_safecuda();
-
-	if (!safecuda::real_cudaLaunch)
-		return cudaErrorUnknown;
-
-	puts("in launch");
-	// append our pointer at tls_arg_end
-	if (d_table_ptr) {
-		// call the real setup arg to place our pointer at offset tls_arg_end
-		// we pass the pointer value (device pointer)
-		void *val =
-			&d_table_ptr; // Note: cudaSetupArgument expects host pointer to data
-		safecuda::real_cudaSetupArgument(&val, sizeof(void *),
-						 tls_arg_end);
-		// (no need to update tls_arg_end further)
-	}
-	// Now call the real launch
-	return safecuda::real_cudaLaunch(func);
-}
-
-extern "C" CUresult cuLaunchKernel(CUfunction f, unsigned int gx,
-				   unsigned int gy, unsigned int gz,
-				   unsigned int bx, unsigned int by,
-				   unsigned int bz, unsigned int shmem,
-				   CUstream stream, void **kernelParams,
-				   void **extra)
-{
-	if (!safecuda::real_cuLaunchKernel)
-		safecuda::init_safecuda();
-	void *orig0 = kernelParams[0];
-	void *orig1 = kernelParams[1];
-
-	// allocate new param array
-	void **newParams = (void **)malloc(3 * sizeof(void *));
-	newParams[0] = orig0;
-	newParams[1] = orig1;
-	newParams[2] = &d_table_ptr;
-
-	// launch using new array
-	auto res = safecuda::real_cuLaunchKernel(
-		f, gx, gy, gz, bx, by, bz, shmem, stream, newParams, extra);
-
-	free(newParams);
-
-	return res;
-}
-
 extern "C" cudaError_t cudaLaunchKernel(const void *func, dim3 gridDim,
 					dim3 blockDim, void **args,
 					size_t sharedMem, cudaStream_t stream)
 {
 	if (!safecuda::real_cudaLaunchKernel)
 		safecuda::init_safecuda();
-	printf(""); // I do not know why it happens but if you remove it it breaks and doesnt work
-	int count = 0;
-	while (args[count])
-		count++;
-	void **newArgs = (void **)alloca((count + 1) * sizeof(void *));
-	newArgs[2] = &d_table_ptr;
-	for (int i = 3; i < count; ++i)
-		newArgs[i + 1] = args[i];
 
-	return safecuda::real_cudaLaunchKernel(func, gridDim, blockDim, newArgs,
-					       sharedMem, stream);
+	int numParams = 5;
+	size_t size = (numParams + 1) * sizeof(void *);
+
+	void **newParams = (void **)alloca(size);
+	newParams[0] = &d_table_ptr;
+	newParams[1] = args[0];
+	newParams[2] = args[1];
+	newParams[3] = args[2];
+	newParams[4] = args[3];
+	newParams[5] = nullptr;
+
+	return safecuda::real_cudaLaunchKernel(func, gridDim, blockDim,
+					       newParams, sharedMem, stream);
 }
