@@ -20,6 +20,7 @@
 #define SAFECUDA_H
 
 #include <cuda_runtime.h>
+#include <cuda.h>
 #include <cstddef>
 
 namespace safecuda
@@ -30,12 +31,28 @@ using cudaMallocManaged_t = cudaError_t (*)(void **, std::size_t, unsigned int);
 using cudaFree_t = cudaError_t (*)(void *);
 using cudaDeviceSynchronize_t = cudaError_t (*)();
 using cudaGetLastError_t = cudaError_t (*)();
+using cudaConfigureCall_t = cudaError_t (*)(dim3, dim3, size_t, cudaStream_t);
+using cudaSetupArgument_t = cudaError_t (*)(const void *, size_t, size_t);
+using cudaLaunch_t = cudaError_t (*)(const void *);
+using cuLaunchKernel_t = CUresult (*)(CUfunction, unsigned int, unsigned int,
+				      unsigned int, unsigned int, unsigned int,
+				      unsigned int, unsigned int, CUstream,
+				      void **, void **);
+using cudaLaunchKernel_t = cudaError_t (*)(const void *func, dim3 gridDim,
+					   dim3 blockDim, void **args,
+					   size_t sharedMem,
+					   cudaStream_t stream);
 
 extern cudaMalloc_t real_cudaMalloc;
 extern cudaMallocManaged_t real_cudaMallocManaged;
 extern cudaFree_t real_cudaFree;
 extern cudaDeviceSynchronize_t real_cudaDeviceSynchronize;
 extern cudaGetLastError_t real_cudaGetLastError;
+extern cudaConfigureCall_t real_cudaConfigureCall;
+extern cudaSetupArgument_t real_cudaSetupArgument;
+extern cudaLaunch_t real_cudaLaunch;
+extern cuLaunchKernel_t real_cuLaunchKernel;
+extern cudaLaunchKernel_t real_cudaLaunchKernel;
 
 void init_safecuda();
 void shutdown_safecuda();

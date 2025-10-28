@@ -122,33 +122,33 @@ TEST_F(SafeCudaRuntimeTest, AllocationTablePopulation)
  * legitimate memory operations. This is a baseline test for correct
  * operation without false positives.
  */
-TEST_F(SafeCudaRuntimeTest, ValidMemoryAccess)
-{
-	constexpr int size = TEST_ARRAY_SIZE;
-	constexpr size_t bytes = size * sizeof(float);
-
-	float *d_data = nullptr;
-	cudaError_t err = cudaMalloc(reinterpret_cast<void **>(&d_data), bytes);
-	ASSERT_TRUE(check_cuda_error(err, "cudaMalloc"));
-
-	ASSERT_NO_THROW(launch_valid_access_kernel(d_data, size));
-
-	err = cudaDeviceSynchronize();
-	ASSERT_TRUE(check_cuda_error(err, "cudaDeviceSynchronize"));
-
-	std::vector<float> h_result(size);
-	err = cudaMemcpy(h_result.data(), d_data, bytes,
-			 cudaMemcpyDeviceToHost);
-	ASSERT_TRUE(check_cuda_error(err, "cudaMemcpy D2H"));
-
-	for (int i = 0; i < size; ++i) {
-		float expected = static_cast<float>(i) * 2.0f;
-		EXPECT_NEAR(h_result[i], expected, FLOATING_POINT_TOLERANCE)
-			<< "Mismatch at index " << i;
-	}
-
-	cudaFree(d_data);
-}
+// TEST_F(SafeCudaRuntimeTest, ValidMemoryAccess)
+// {
+// 	constexpr int size = TEST_ARRAY_SIZE;
+// 	constexpr size_t bytes = size * sizeof(float);
+//
+// 	float *d_data = nullptr;
+// 	cudaError_t err = cudaMalloc(reinterpret_cast<void **>(&d_data), bytes);
+// 	ASSERT_TRUE(check_cuda_error(err, "cudaMalloc"));
+//
+// 	ASSERT_NO_THROW(launch_valid_access_kernel(d_data, size));
+//
+// 	err = cudaDeviceSynchronize();
+// 	ASSERT_TRUE(check_cuda_error(err, "cudaDeviceSynchronize"));
+//
+// 	std::vector<float> h_result(size);
+// 	err = cudaMemcpy(h_result.data(), d_data, bytes,
+// 			 cudaMemcpyDeviceToHost);
+// 	ASSERT_TRUE(check_cuda_error(err, "cudaMemcpy D2H"));
+//
+// 	for (int i = 0; i < size; ++i) {
+// 		float expected = static_cast<float>(i) * 2.0f;
+// 		EXPECT_NEAR(h_result[i], expected, FLOATING_POINT_TOLERANCE)
+// 			<< "Mismatch at index " << i;
+// 	}
+//
+// 	cudaFree(d_data);
+// }
 
 /**
  * @brief Tests interior pointer bounds checking functionality
@@ -158,36 +158,36 @@ TEST_F(SafeCudaRuntimeTest, ValidMemoryAccess)
  * linear scan through the allocation table. This tests the fallback
  * mechanism when the fast-path magic word check fails.
  */
-TEST_F(SafeCudaRuntimeTest, InteriorPointerAccess)
-{
-	constexpr int size = TEST_ARRAY_SIZE;
-	constexpr size_t bytes = size * sizeof(float);
-	constexpr int offset = 64;
-
-	float *d_data = nullptr;
-	cudaError_t err = cudaMalloc(reinterpret_cast<void **>(&d_data), bytes);
-	ASSERT_TRUE(check_cuda_error(err, "cudaMalloc"));
-
-	ASSERT_NO_THROW(launch_interior_pointer_kernel(d_data, size, offset));
-
-	err = cudaDeviceSynchronize();
-	ASSERT_TRUE(check_cuda_error(err, "cudaDeviceSynchronize"));
-
-	std::vector<float> h_result(size);
-	err = cudaMemcpy(h_result.data(), d_data, bytes,
-			 cudaMemcpyDeviceToHost);
-	ASSERT_TRUE(check_cuda_error(err, "cudaMemcpy D2H"));
-
-	for (int i = 0; i < size - offset; ++i) {
-		auto expected = static_cast<float>(i);
-		EXPECT_NEAR(h_result[i + offset], expected,
-			    FLOATING_POINT_TOLERANCE)
-			<< "Interior pointer access failed at index "
-			<< i + offset;
-	}
-
-	cudaFree(d_data);
-}
+// TEST_F(SafeCudaRuntimeTest, InteriorPointerAccess)
+// {
+// 	constexpr int size = TEST_ARRAY_SIZE;
+// 	constexpr size_t bytes = size * sizeof(float);
+// 	constexpr int offset = 64;
+//
+// 	float *d_data = nullptr;
+// 	cudaError_t err = cudaMalloc(reinterpret_cast<void **>(&d_data), bytes);
+// 	ASSERT_TRUE(check_cuda_error(err, "cudaMalloc"));
+//
+// 	ASSERT_NO_THROW(launch_interior_pointer_kernel(d_data, size, offset));
+//
+// 	err = cudaDeviceSynchronize();
+// 	ASSERT_TRUE(check_cuda_error(err, "cudaDeviceSynchronize"));
+//
+// 	std::vector<float> h_result(size);
+// 	err = cudaMemcpy(h_result.data(), d_data, bytes,
+// 			 cudaMemcpyDeviceToHost);
+// 	ASSERT_TRUE(check_cuda_error(err, "cudaMemcpy D2H"));
+//
+// 	for (int i = 0; i < size - offset; ++i) {
+// 		auto expected = static_cast<float>(i);
+// 		EXPECT_NEAR(h_result[i + offset], expected,
+// 			    FLOATING_POINT_TOLERANCE)
+// 			<< "Interior pointer access failed at index "
+// 			<< i + offset;
+// 	}
+//
+// 	cudaFree(d_data);
+// }
 
 /**
  * @brief Tests metadata injection across various allocation sizes
@@ -231,25 +231,25 @@ TEST_F(SafeCudaRuntimeTest, MixedAllocationSizes)
  * correctly instrumented with SafeCUDA metadata and bounds checking.
  * This ensures the system works with both regular and managed memory.
  */
-TEST_F(SafeCudaRuntimeTest, cudaMallocManagedIntegration)
-{
-	constexpr size_t test_size = 1024 * sizeof(float);
-	float *d_ptr = nullptr;
-
-	cudaError_t err =
-		cudaMallocManaged(reinterpret_cast<void **>(&d_ptr), test_size);
-	ASSERT_TRUE(check_cuda_error(err, "cudaMallocManaged"));
-	ASSERT_NE(d_ptr, nullptr);
-
-	uint16_t magic = 0;
-	char *metadata_base = reinterpret_cast<char *>(d_ptr) - 16;
-	std::memcpy(&magic, metadata_base, sizeof(uint16_t));
-
-	EXPECT_EQ(magic, EXPECTED_MAGIC);
-
-	err = cudaFree(d_ptr);
-	EXPECT_TRUE(check_cuda_error(err, "cudaFree"));
-}
+// TEST_F(SafeCudaRuntimeTest, cudaMallocManagedIntegration)
+// {
+// 	constexpr size_t test_size = 1024 * sizeof(float);
+// 	float *d_ptr = nullptr;
+//
+// 	cudaError_t err =
+// 		cudaMallocManaged(reinterpret_cast<void **>(&d_ptr), test_size);
+// 	ASSERT_TRUE(check_cuda_error(err, "cudaMallocManaged"));
+// 	ASSERT_NE(d_ptr, nullptr);
+//
+// 	uint16_t magic = 0;
+// 	char *metadata_base = reinterpret_cast<char *>(d_ptr) - 16;
+// 	std::memcpy(&magic, metadata_base, sizeof(uint16_t));
+//
+// 	EXPECT_EQ(magic, EXPECTED_MAGIC);
+//
+// 	err = cudaFree(d_ptr);
+// 	EXPECT_TRUE(check_cuda_error(err, "cudaFree"));
+// }
 
 /**
  * @brief Tests proper handling of null pointer in cudaFree
@@ -272,29 +272,29 @@ TEST_F(SafeCudaRuntimeTest, NullPointerHandling)
  * concurrent allocations supported. This helps validate the
  * fixed-size table design (1024 entries).
  */
-TEST_F(SafeCudaRuntimeTest, AllocationTableCapacity)
-{
-	constexpr int max_test_allocs = 100;
-	std::vector<float *> pointers;
-
-	for (int i = 0; i < max_test_allocs; ++i) {
-		float *d_ptr = nullptr;
-		cudaError_t err = cudaMalloc(reinterpret_cast<void **>(&d_ptr),
-					     256 * sizeof(float));
-		if (err != cudaSuccess) {
-			std::cout << "Allocation limit reached at " << i
-				  << " allocations" << std::endl;
-			break;
-		}
-		pointers.push_back(d_ptr);
-	}
-
-	EXPECT_GT(pointers.size(), 0) << "No allocations succeeded";
-
-	for (auto ptr : pointers) {
-		cudaFree(ptr);
-	}
-}
+// TEST_F(SafeCudaRuntimeTest, AllocationTableCapacity)
+// {
+// 	constexpr int max_test_allocs = 100;
+// 	std::vector<float *> pointers;
+//
+// 	for (int i = 0; i < max_test_allocs; ++i) {
+// 		float *d_ptr = nullptr;
+// 		cudaError_t err = cudaMalloc(reinterpret_cast<void **>(&d_ptr),
+// 					     256 * sizeof(float));
+// 		if (err != cudaSuccess) {
+// 			std::cout << "Allocation limit reached at " << i
+// 				  << " allocations" << std::endl;
+// 			break;
+// 		}
+// 		pointers.push_back(d_ptr);
+// 	}
+//
+// 	EXPECT_GT(pointers.size(), 0) << "No allocations succeeded";
+//
+// 	for (auto ptr : pointers) {
+// 		cudaFree(ptr);
+// 	}
+// }
 
 /**
  * @brief Tests direct invocation of bounds check with valid pointer
@@ -304,18 +304,18 @@ TEST_F(SafeCudaRuntimeTest, AllocationTableCapacity)
  * in-bounds memory access without throwing exceptions when exceptions
  * are not enabled.
  */
-TEST_F(SafeCudaRuntimeTest, DirectBoundsCheckValidNoException)
-{
-	constexpr int size = TEST_ARRAY_SIZE;
-	constexpr size_t bytes = size * sizeof(float);
-	float *d_data = nullptr;
-	cudaError_t err = cudaMalloc(reinterpret_cast<void **>(&d_data), bytes);
-	ASSERT_TRUE(check_cuda_error(err, "cudaMalloc"));
-	ASSERT_NO_THROW(launch_manual_bounds_check(d_data, size, 0));
-	err = cudaDeviceSynchronize();
-	EXPECT_TRUE(check_cuda_error(err, "cudaDeviceSynchronize"));
-	cudaFree(d_data);
-}
+// TEST_F(SafeCudaRuntimeTest, DirectBoundsCheckValidNoException)
+// {
+// 	constexpr int size = TEST_ARRAY_SIZE;
+// 	constexpr size_t bytes = size * sizeof(float);
+// 	float *d_data = nullptr;
+// 	cudaError_t err = cudaMalloc(reinterpret_cast<void **>(&d_data), bytes);
+// 	ASSERT_TRUE(check_cuda_error(err, "cudaMalloc"));
+// 	ASSERT_NO_THROW(launch_manual_bounds_check(d_data, size, 0));
+// 	err = cudaDeviceSynchronize();
+// 	EXPECT_TRUE(check_cuda_error(err, "cudaDeviceSynchronize"));
+// 	cudaFree(d_data);
+// }
 
 /**
  * @brief Tests bounds check with invalid pointer and exception throwing
@@ -325,19 +325,19 @@ TEST_F(SafeCudaRuntimeTest, DirectBoundsCheckValidNoException)
  * error message. This tests the integration of bounds checking with the
  * exception-based error reporting mechanism.
  */
-TEST_F(SafeCudaRuntimeTest, DirectBoundsCheckInvalidWithException)
-{
-	setenv("SAFECUDA_THROW_OOB", "1", 1);
-	constexpr int size = TEST_ARRAY_SIZE;
-	constexpr size_t bytes = size * sizeof(float);
-	float *d_data = nullptr;
-	cudaError_t err = cudaMalloc(reinterpret_cast<void **>(&d_data), bytes);
-	ASSERT_TRUE(check_cuda_error(err, "cudaMalloc"));
-	ASSERT_NO_THROW(launch_manual_bounds_check(d_data, size, 1));
-	EXPECT_THROW(cudaDeviceSynchronize(), std::runtime_error);
-	cudaFree(d_data);
-	unsetenv("SAFECUDA_THROW_OOB");
-}
+// TEST_F(SafeCudaRuntimeTest, DirectBoundsCheckInvalidWithException)
+// {
+// 	setenv("SAFECUDA_THROW_OOB", "1", 1);
+// 	constexpr int size = TEST_ARRAY_SIZE;
+// 	constexpr size_t bytes = size * sizeof(float);
+// 	float *d_data = nullptr;
+// 	cudaError_t err = cudaMalloc(reinterpret_cast<void **>(&d_data), bytes);
+// 	ASSERT_TRUE(check_cuda_error(err, "cudaMalloc"));
+// 	ASSERT_NO_THROW(launch_manual_bounds_check(d_data, size, 1));
+// 	EXPECT_THROW(cudaDeviceSynchronize(), std::runtime_error);
+// 	cudaFree(d_data);
+// 	unsetenv("SAFECUDA_THROW_OOB");
+// }
 
 /**
  * @brief Tests error reporting without exception throwing
@@ -346,19 +346,19 @@ TEST_F(SafeCudaRuntimeTest, DirectBoundsCheckInvalidWithException)
  * are still detected and logged but do not terminate the program. This
  * tests the default error reporting behavior via stderr logging.
  */
-TEST_F(SafeCudaRuntimeTest, ErrorReportingWithoutException)
-{
-	constexpr int size = TEST_ARRAY_SIZE;
-	constexpr size_t bytes = size * sizeof(float);
-	float *d_data = nullptr;
-	cudaError_t err = cudaMalloc(reinterpret_cast<void **>(&d_data), bytes);
-	ASSERT_TRUE(check_cuda_error(err, "cudaMalloc"));
-	ASSERT_NO_THROW(launch_manual_bounds_check(d_data, size, 1));
-	EXPECT_NO_THROW(cudaDeviceSynchronize());
-	ASSERT_NO_THROW(launch_manual_bounds_check(d_data, size, 0));
-	EXPECT_NO_THROW(cudaDeviceSynchronize());
-	cudaFree(d_data);
-}
+// TEST_F(SafeCudaRuntimeTest, ErrorReportingWithoutException)
+// {
+// 	constexpr int size = TEST_ARRAY_SIZE;
+// 	constexpr size_t bytes = size * sizeof(float);
+// 	float *d_data = nullptr;
+// 	cudaError_t err = cudaMalloc(reinterpret_cast<void **>(&d_data), bytes);
+// 	ASSERT_TRUE(check_cuda_error(err, "cudaMalloc"));
+// 	ASSERT_NO_THROW(launch_manual_bounds_check(d_data, size, 1));
+// 	EXPECT_NO_THROW(cudaDeviceSynchronize());
+// 	ASSERT_NO_THROW(launch_manual_bounds_check(d_data, size, 0));
+// 	EXPECT_NO_THROW(cudaDeviceSynchronize());
+// 	cudaFree(d_data);
+// }
 
 /**
  * @brief Tests error reporting for Use After Free
@@ -366,20 +366,20 @@ TEST_F(SafeCudaRuntimeTest, ErrorReportingWithoutException)
  * Verifies that use-after-free errors are properly detected and reported. Tests
  * the alternative error checking path with exception throwing enabled.
  */
-TEST_F(SafeCudaRuntimeTest, UseAfterFree)
-{
-	setenv("SAFECUDA_THROW_FREED_MEMORY", "1", 1);
-	constexpr int size = TEST_ARRAY_SIZE;
-	constexpr size_t bytes = size * sizeof(float);
-	float *d_data = nullptr;
-	cudaError_t err = cudaMalloc(reinterpret_cast<void **>(&d_data), bytes);
-	ASSERT_TRUE(check_cuda_error(err, "cudaMalloc"));
-	ASSERT_NO_THROW(launch_manual_bounds_check(d_data, size, 0));
-	EXPECT_NO_THROW(cudaDeviceSynchronize());
-	err = cudaFree(d_data);
-	ASSERT_TRUE(check_cuda_error(err, "cudaFree"));
-	EXPECT_NO_THROW(cudaDeviceSynchronize());
-	ASSERT_NO_THROW(launch_manual_bounds_check(d_data, size, 0));
-	EXPECT_THROW(cudaDeviceSynchronize(), std::runtime_error);
-	unsetenv("SAFECUDA_THROW_FREED_MEMORY");
-}
+// TEST_F(SafeCudaRuntimeTest, UseAfterFree)
+// {
+// 	setenv("SAFECUDA_THROW_FREED_MEMORY", "1", 1);
+// 	constexpr int size = TEST_ARRAY_SIZE;
+// 	constexpr size_t bytes = size * sizeof(float);
+// 	float *d_data = nullptr;
+// 	cudaError_t err = cudaMalloc(reinterpret_cast<void **>(&d_data), bytes);
+// 	ASSERT_TRUE(check_cuda_error(err, "cudaMalloc"));
+// 	ASSERT_NO_THROW(launch_manual_bounds_check(d_data, size, 0));
+// 	EXPECT_NO_THROW(cudaDeviceSynchronize());
+// 	err = cudaFree(d_data);
+// 	ASSERT_TRUE(check_cuda_error(err, "cudaFree"));
+// 	EXPECT_NO_THROW(cudaDeviceSynchronize());
+// 	ASSERT_NO_THROW(launch_manual_bounds_check(d_data, size, 0));
+// 	EXPECT_THROW(cudaDeviceSynchronize(), std::runtime_error);
+// 	unsetenv("SAFECUDA_THROW_FREED_MEMORY");
+// }

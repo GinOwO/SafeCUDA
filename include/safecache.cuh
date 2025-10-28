@@ -54,10 +54,7 @@ enum ErrorCode {
 };
 }
 
-extern "C" cudaError_t
-set_device_table_pointer(safecuda::memory::AllocationTable *ptr);
-
-extern "C" __device__ bool FREED_MEM_DEV;
+extern "C" __device__ safecuda::memory::AllocationTable *d_table;
 extern "C" __device__ void __bounds_check_safecuda(void *ptr);
 extern "C" __device__ void __bounds_check_safecuda_no_trap(void *ptr);
 

@@ -183,6 +183,7 @@ instrumentPTXFile(const fs::path &ptx_path,
 
 	size_t instruction_index = 0;
 	size_t instrumented_count = 0;
+	int header = 0;
 
 	for (size_t line_num = 1; line_num <= file_lines.size(); ++line_num) {
 		const std::string &current_line = file_lines[line_num - 1];
@@ -193,15 +194,35 @@ instrumentPTXFile(const fs::path &ptx_path,
 			continue;
 		}
 
-		bool needs_instrumentation = false;
-		std::string bounds_check_call;
+		if (current_line.contains(".entry")) {
+			header = 1;
+		}
 
 		if (!(instruction_index < instructions.size() &&
 		      instructions[instruction_index].line_number ==
 			      static_cast<int64_t>(line_num))) {
+			if (header == 1 && current_line.starts_with(')')) {
+				header = 2;
+				output_file << ", .param .u64 d_table_param_2 "
+					    << current_line << "\n";
+				continue;
+			}
+
+			if (header == 2 && current_line.starts_with('{')) {
+				output_file
+					<< current_line
+					<< "\n.reg .b64 %rd_table;\nld.param.u64 %rd_table,"
+					   " [d_table_param_2];\nst.global.u64 [d_table], %rd_table;\n";
+				header = 3;
+				continue;
+			}
+
 			output_file << current_line << "\n";
 			continue;
 		}
+
+		bool needs_instrumentation = false;
+		std::string bounds_check_call;
 
 		const auto &instr = instructions[instruction_index];
 		std::string address_reg = extractAddressRegister(instr.lexemes);
