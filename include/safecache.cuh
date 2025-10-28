@@ -56,6 +56,5 @@ enum ErrorCode {
 
 extern "C" __device__ safecuda::memory::AllocationTable *d_table;
 extern "C" __device__ void __bounds_check_safecuda(void *ptr);
-extern "C" __device__ void __bounds_check_safecuda_no_trap(void *ptr);
 
 #endif

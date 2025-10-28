@@ -63,35 +63,6 @@ target_compile_definitions(safecuda PRIVATE
         PROJECT_VERSION="${PROJECT_VERSION}"
 )
 
-# Build libsafecuda_device -----------------------------------------------------
-add_library(safecuda_device STATIC
-        src/safecache.cu
-)
-
-target_link_libraries(safecuda_device
-        CUDA::cudart_static
-)
-
-set_target_properties(safecuda_device PROPERTIES
-        CUDA_SEPARABLE_COMPILATION ON
-        CUDA_RESOLVE_DEVICE_SYMBOLS OFF
-        POSITION_INDEPENDENT_CODE ON
-)
-
-target_compile_options(safecuda_device PRIVATE
-        $<$<COMPILE_LANGUAGE:CUDA>:--extended-lambda>
-        $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
-        $<$<COMPILE_LANGUAGE:CUDA>:-rdc=true>
-        $<$<COMPILE_LANGUAGE:CUDA>:-dc>
-)
-
-target_compile_definitions(safecuda_device PRIVATE
-        PROJECT_VERSION_MAJOR="${PROJECT_VERSION_MAJOR}"
-        PROJECT_VERSION_MINOR="${PROJECT_VERSION_MINOR}"
-        PROJECT_VERSION_PATCH="${PROJECT_VERSION_PATCH}"
-        PROJECT_VERSION="${PROJECT_VERSION}"
-)
-
 # Tools ------------------------------------------------------------------------
 if (BUILD_SAFECUDA_TOOLS)
     message(STATUS "Building SafeCUDA tools")
