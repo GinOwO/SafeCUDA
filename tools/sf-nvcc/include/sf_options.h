@@ -8,10 +8,11 @@
  *
  * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
  * @date 2025-08-13
- * @version 1.0.1
+ * @version 1.1.0
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  *
  * Change Log:
+ * - 2025-10-28: Refactored to use nvcc -dryrun command orchestration
  * - 2025-10-23: Changed fail fast functionality and so default is true now
  * - 2025-09-23: Rewrote stuff around NvccOptions
  * - 2025-09-22: Removed some switches, moved stuff around for more modularity
@@ -28,12 +29,10 @@
 // ANSI COLOR BUILDER
 #define ACOL(C, TB) "\033[" TB C "m"
 #define ACOL_RESET() "\033[0m"
-
 #define ACOL_DF "3"
 #define ACOL_BF "9"
 #define ACOL_DB "4"
 #define ACOL_BB "10"
-
 #define ACOL_K "0"
 #define ACOL_R "1"
 #define ACOL_G "2"
@@ -45,6 +44,7 @@
 
 namespace safecuda::tools::sf_nvcc
 {
+
 /**
  * @brief Configuration options for SafeCUDA PTX modification
  *
@@ -92,7 +92,7 @@ struct SfNvccOptions {
  * @return SfNvccOptions Parsed options structure
  * @throws std::invalid_argument for malformed SafeCUDA options
  *
- * @note --keep, --keep-dir, -c, --ptx to nvcc are ignored
+ * @note All NVCC arguments are preserved and passed through except -dryrun
  */
 SfNvccOptions parse_command_line(int argc, char *argv[]);
 
@@ -112,6 +112,6 @@ void print_version();
 void print_args(const SafeCudaOptions &safecuda_opts,
 		const NvccOptions &nvcc_opts);
 
-} // namespace safecuda::tools
+} // namespace safecuda::tools::sf_nvcc
 
 #endif // SAFECUDA_SF_OPTIONS_H

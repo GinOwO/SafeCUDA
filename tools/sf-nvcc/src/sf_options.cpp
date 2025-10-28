@@ -8,25 +8,27 @@
  *
  * @author Kiran <kiran.pdas2022@vitstudent.ac.in>
  * @date 2025-08-13
- * @version 1.0.0
+ * @version 1.1.0
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  *
  * Change Log:
+ * - 2025-10-28: Refactored to use nvcc -dryrun command orchestration
  * - 2025-09-22: Removed some switches, moved stuff around for more modularity
  * - 2025-08-13: Enabling debug also now enables verbose, added output switch
  * - 2025-08-13: Initial File
  */
 
 #include "sf_options.h"
-
-#include <cstdio>
-#include <cstdlib>
+#include <algorithm>
+#include <filesystem>
 #include <iostream>
 #include <stdexcept>
-#include <utility>
-#include <filesystem>
-
+#include <string>
 #include <zlib.h>
+
+#if defined(__unix__) || defined(__APPLE__) || defined(__linux__)
+#include <unistd.h>
+#endif
 
 namespace sf_nvcc = safecuda::tools::sf_nvcc;
 
@@ -49,36 +51,16 @@ static std::string bad_value(const std::string &arg, const std::string &val)
 	       arg + "\" does not accept \"" + val + "\"\n";
 }
 
-/* Sample nvcc command
-nvcc \
-	-O3 -DNDEBUG -Xcompiler -fPIC \
-	-Wno-deprecated-gpu-targets \
-	--extended-lambda \
-	--expt-relaxed-constexpr \
-	--generate-code arch=compute_52,code=sm_52 \
-	--generate-code arch=compute_60,code=sm_60 \
-	--generate-code arch=compute_61,code=sm_61 \
-	--generate-code arch=compute_75,code=sm_75 \
-	--generate-code arch=compute_86,code=sm_86 \
-	-rdc=true \
-	examples/example.cpp \
-	examples/kernel1.cu \
-	examples/kernel2.cu \
-	-o example
- */
-
 sf_nvcc::SfNvccOptions sf_nvcc::parse_command_line(const int argc, char *argv[])
 {
 	SfNvccOptions options;
 	int arg_pos = 1;
-
 	while (arg_pos < argc) {
 		if (std::string arg{argv[arg_pos]}; arg.starts_with("-sf-")) {
 			if (arg == "-sf-help") {
 				print_help();
 				std::exit(EXIT_SUCCESS);
 			}
-
 			if (arg == "-sf-version") {
 				print_version();
 			} else if (++arg_pos >= argc) {
@@ -141,22 +123,20 @@ sf_nvcc::SfNvccOptions sf_nvcc::parse_command_line(const int argc, char *argv[])
 					std::string{"Invalid argument: "} +
 					arg);
 			}
-
 		} else {
+			// Capture output path separately but keep it in nvcc_args
 			if (arg == "-o") {
-				if (++arg_pos >= argc) {
-					throw std::runtime_error(
-						missing_input(arg));
+				if (arg_pos + 1 < argc) {
+					options.nvcc_opts.output_path =
+						std::string(argv[arg_pos + 1]);
 				}
-				options.nvcc_opts.output_path =
-					std::string(argv[arg_pos]);
-			} else if (arg.ends_with(".cu")) {
-				options.nvcc_opts.input_files.emplace_back(
-					argv[arg_pos]);
-			} else if (!(arg.starts_with("--keep") ||
-				     arg.starts_with("-rdc") || arg == "-c" ||
-				     arg == "-dc" || arg == "-dlink" ||
-				     arg == "--ptx")) {
+				options.nvcc_opts.nvcc_args.emplace_back(arg);
+			} else if (arg.ends_with(".cu") ||
+				   arg.ends_with(".cpp")) {
+				options.nvcc_opts.input_files.emplace_back(arg);
+				options.nvcc_opts.nvcc_args.emplace_back(arg);
+			} else if (arg != "-dryrun") {
+				// Pass through all args except -dryrun (we use it internally)
 				options.nvcc_opts.nvcc_args.emplace_back(arg);
 			}
 		}
@@ -184,7 +164,6 @@ sf_nvcc::SfNvccOptions sf_nvcc::parse_command_line(const int argc, char *argv[])
 
 	if (options.safecuda_opts.enable_debug)
 		options.safecuda_opts.enable_verbose = true;
-
 	return options;
 }
 
@@ -194,16 +173,12 @@ void sf_nvcc::print_help()
 	z_stream zs{};
 	zs.next_in = help_txt_gz;
 	zs.avail_in = help_txt_gz_len;
-
 	if (inflateInit2(&zs, 16 + MAX_WBITS) != Z_OK)
 		throw std::runtime_error("inflateInit failed");
-
-	zs.next_out = reinterpret_cast<Bytef *>(&out[0]);
+	zs.next_out = reinterpret_cast<unsigned char *>(&out[0]);
 	zs.avail_out = out.size();
-
 	if (int ret = inflate(&zs, Z_FINISH); ret != Z_STREAM_END)
 		throw std::runtime_error("inflate failed");
-
 	inflateEnd(&zs);
 	out.resize(zs.total_out);
 	std::cout << out << '\n';
@@ -230,19 +205,16 @@ void sf_nvcc::print_args(const SafeCudaOptions &safecuda_opts,
 		  << "enable_verbose: " << enable_verbose << "\n\t"
 		  << "fail_fast: " << fail_fast << "\n\t"
 		  << "log_violations: " << log_violations << "\n\t"
-		  << "log_file: " << (log_file.empty() ? "<none>" : log_file)
+		  << "log_file: " << (log_file.empty() ? "" : log_file)
 		  << "\n\t"
 		  << "keep_dir: " << keep_dir << "\n\t"
 		  << "output_path: " << nvcc_opts.output_path << "\n\t"
 		  << "nvcc_args: \n\t\t";
-
 	std::cout << "Input args:\n\t\t";
 	for (const auto &arg : nvcc_opts.input_files)
 		std::cout << arg << "\n\t\t";
-
 	std::cout << "\n\t\tOther args:\n\t\t";
 	for (const auto &arg : nvcc_opts.nvcc_args)
 		std::cout << arg << "\n\t\t";
-
 	std::cout << "\n";
 }

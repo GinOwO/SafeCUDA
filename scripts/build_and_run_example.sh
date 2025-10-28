@@ -41,12 +41,12 @@ echo "g++ version: $(g++ --version)"
 echo "-----------------------------------------------"
 
 echo "Building example_nvcc"
-nvcc -O3 -Xcompiler -fPIC --extended-lambda --expt-relaxed-constexpr --generate-code arch=compute_60,code=sm_60 --generate-code arch=compute_61,code=sm_61 --generate-code arch=compute_75,code=sm_75 --generate-code arch=compute_86,code=sm_86 examples/example.cpp examples/kernel1.cu examples/kernel2.cu examples/montecarlo.cu examples/out_of_bounds.cu -o example_nvcc -Wno-deprecated-gpu-targets
+#nvcc -O3 -Xcompiler -fPIC --extended-lambda --expt-relaxed-constexpr --generate-code arch=compute_60,code=sm_60 --generate-code arch=compute_61,code=sm_61 --generate-code arch=compute_75,code=sm_75 --generate-code arch=compute_86,code=sm_86 examples/example.cpp examples/kernel1.cu examples/kernel2.cu examples/montecarlo.cu examples/out_of_bounds.cu -o example_nvcc -Wno-deprecated-gpu-targets
 
 echo "-----------------------------------------------"
 
 echo "Building example (sf-nvcc)"
-$SF_NVCC -O3 -Xcompiler -fPIC --extended-lambda --expt-relaxed-constexpr --generate-code arch=compute_75,code=sm_75 -rdc=true examples/example.cpp examples/out_of_bounds.cu -o example -Wno-deprecated-gpu-targets -sf-keep-dir "cmake-build-Debug/examples" -sf-debug true
+$SF_NVCC -O0 -G -g -Xcompiler -fPIC --extended-lambda --expt-relaxed-constexpr --generate-code arch=compute_75,code=sm_75 -rdc=true examples/example.cpp examples/out_of_bounds.cu -o example -Wno-deprecated-gpu-targets -sf-keep-dir "cmake-build-Debug/examples" -sf-debug true
 
 echo "-----------------------------------------------"
 

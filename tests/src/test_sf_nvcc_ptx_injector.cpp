@@ -294,13 +294,13 @@ static const std::string EXPECTED_OUTPUT = R"(//
     mul.wide.s32   %rd7, %r1, 4;
     add.s64    %rd8, %rd4, %rd7;
     add.s64    %rd9, %rd5, %rd7;
-    call.uni __bounds_check_safecuda, (%rd8);
+    call __bounds_check_safecuda, (%rd8);
     ld.global.f32  %f1, [%rd8];
-    call.uni __bounds_check_safecuda, (%rd9);
+    call __bounds_check_safecuda, (%rd9);
     ld.global.f32  %f2, [%rd9];
     add.f32    %f3, %f1, %f2;
     add.s64    %rd10, %rd6, %rd7;
-    call.uni __bounds_check_safecuda, (%rd10);
+    call __bounds_check_safecuda, (%rd10);
     st.global.f32  [%rd10], %f3;
 
 $L__BB0_2:
@@ -350,13 +350,13 @@ TEST_F(SfNvccPtxInjectionTest, BasicBoundsCheckInsertion)
 					 std::istreambuf_iterator<char>());
 
 	EXPECT_NE(instrumented_content.find(
-			  "call.uni __bounds_check_safecuda, (%rd4);"),
+			  "call __bounds_check_safecuda, (%rd4);"),
 		  std::string::npos);
 
 	size_t first_bounds_check = instrumented_content.find(
-		"call.uni __bounds_check_safecuda, (%rd4);");
+		"call __bounds_check_safecuda, (%rd4);");
 	size_t second_bounds_check = instrumented_content.find(
-		"call.uni __bounds_check_safecuda, (%rd4);",
+		"call __bounds_check_safecuda, (%rd4);",
 		first_bounds_check + 1);
 
 	EXPECT_NE(first_bounds_check, std::string::npos);
@@ -384,16 +384,16 @@ TEST_F(SfNvccPtxInjectionTest, ComplexInstructionTypeHandling)
 	std::string content((std::istreambuf_iterator<char>(file)),
 			    std::istreambuf_iterator<char>());
 
-	EXPECT_NE(content.find("call.uni __bounds_check_safecuda, (%rd6);"),
+	EXPECT_NE(content.find("call __bounds_check_safecuda, (%rd6);"),
 		  std::string::npos);
-	EXPECT_NE(content.find("call.uni __bounds_check_safecuda, (%rd7);"),
+	EXPECT_NE(content.find("call __bounds_check_safecuda, (%rd7);"),
 		  std::string::npos);
 
 	std::istringstream iss(content);
 	std::string line;
 	int bounds_check_count = 0;
 	while (std::getline(iss, line)) {
-		if (line.find("call.uni __bounds_check_safecuda,") !=
+		if (line.find("call __bounds_check_safecuda,") !=
 		    std::string::npos) {
 			bounds_check_count++;
 		}
@@ -454,7 +454,7 @@ TEST_F(SfNvccPtxInjectionTest, NoGlobalInstructionsHandling)
 	std::string content((std::istreambuf_iterator<char>(file)),
 			    std::istreambuf_iterator<char>());
 
-	EXPECT_EQ(content.find("call.uni __bounds_check_safecuda"),
+	EXPECT_EQ(content.find("call __bounds_check_safecuda"),
 		  std::string::npos);
 }
 
@@ -479,7 +479,7 @@ TEST_F(SfNvccPtxInjectionTest, EmptyPtxFileHandling)
 	std::string content((std::istreambuf_iterator<char>(file)),
 			    std::istreambuf_iterator<char>());
 
-	EXPECT_EQ(content.find("call.uni __bounds_check_safecuda"),
+	EXPECT_EQ(content.find("call __bounds_check_safecuda"),
 		  std::string::npos);
 }
 
@@ -523,7 +523,7 @@ TEST_F(SfNvccPtxInjectionTest, IndentationPreservation)
 	bool found_indented_bounds_check = false;
 
 	while (std::getline(file, line)) {
-		if (line.find("call.uni __bounds_check_safecuda, (%rd4);") !=
+		if (line.find("call __bounds_check_safecuda, (%rd4);") !=
 		    std::string::npos) {
 			EXPECT_EQ(line.find_first_not_of(" \t"), 4);
 			found_indented_bounds_check = true;
@@ -555,7 +555,7 @@ TEST_F(SfNvccPtxInjectionTest, VerboseModeOperation)
 	std::string content((std::istreambuf_iterator<char>(file)),
 			    std::istreambuf_iterator<char>());
 
-	EXPECT_NE(content.find("call.uni __bounds_check_safecuda, (%rd4);"),
+	EXPECT_NE(content.find("call __bounds_check_safecuda, (%rd4);"),
 		  std::string::npos);
 }
 
@@ -588,7 +588,7 @@ TEST_F(SfNvccPtxInjectionTest, DebugModeComprehensive)
 	std::string line;
 	int bounds_check_count = 0;
 	while (std::getline(iss, line)) {
-		if (line.find("call.uni __bounds_check_safecuda,") !=
+		if (line.find("call __bounds_check_safecuda,") !=
 		    std::string::npos) {
 			bounds_check_count++;
 		}
@@ -624,7 +624,7 @@ TEST_F(SfNvccPtxInjectionTest, MixedDebugVerboseMode)
 
 	size_t bounds_check_count = 0;
 	size_t pos = 0;
-	while ((pos = content.find("call.uni __bounds_check_safecuda,", pos)) !=
+	while ((pos = content.find("call __bounds_check_safecuda,", pos)) !=
 	       std::string::npos) {
 		bounds_check_count++;
 		pos++;

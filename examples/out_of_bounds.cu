@@ -1,12 +1,9 @@
 #include <cuda_runtime.h>
 #include <stdio.h>
 
-extern "C" __device__ void __bounds_check_safecuda(void *);
-
 __global__ void outOfBoundsKernel(float *data, int n)
 {
 	int idx = blockIdx.x * blockDim.x + threadIdx.x;
-	__bounds_check_safecuda(data + idx + n + 100);
 	data[idx + n + 100] = 42.0f;
 }
 

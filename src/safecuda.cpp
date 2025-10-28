@@ -111,7 +111,7 @@ void init_safecuda()
 			"[SafeCUDA] Failed to set device table pointer: %s\n",
 			cudaGetErrorString(err));
 	}
-	safecuda::real_cudaDeviceSynchronize();
+	real_cudaDeviceSynchronize();
 }
 
 void shutdown_safecuda()
@@ -139,6 +139,8 @@ static bool throw_exception_on(const memory::ErrorCode err)
 
 void check_and_report_errors()
 {
+	std::cout << "in check_and_report\n\n"
+		  << h_table->entries[0].flags << "\n\n";
 	if (!h_table || h_table->entries[0].flags == memory::NO_ERROR)
 		return;
 	const std::uintptr_t addr = h_table->entries[0].start_addr;
