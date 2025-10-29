@@ -12,6 +12,7 @@
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  *
  * Change Log:
+ * - 2025-10-30: Removed logfile
  * - 2025-10-28: Refactored to use nvcc -dryrun command orchestration
  * - 2025-09-22: Removed some switches, moved stuff around for more modularity
  * - 2025-08-13: Enabling debug also now enables verbose, added output switch
@@ -104,18 +105,6 @@ sf_nvcc::SfNvccOptions sf_nvcc::parse_command_line(const int argc, char *argv[])
 				else
 					throw std::invalid_argument(
 						bad_value(arg, val));
-			} else if (arg == "-sf-log-violations") {
-				if (val == "true")
-					options.safecuda_opts.log_violations =
-						true;
-				else if (val == "false")
-					options.safecuda_opts.log_violations =
-						false;
-				else
-					throw std::invalid_argument(
-						bad_value(arg, val));
-			} else if (arg == "-sf-log-path") {
-				options.safecuda_opts.log_file = val;
 			} else if (arg == "-sf-keep-dir") {
 				options.safecuda_opts.keep_dir = val;
 			} else {
@@ -124,7 +113,6 @@ sf_nvcc::SfNvccOptions sf_nvcc::parse_command_line(const int argc, char *argv[])
 					arg);
 			}
 		} else {
-			// Capture output path separately but keep it in nvcc_args
 			if (arg == "-o") {
 				if (arg_pos + 1 < argc) {
 					options.nvcc_opts.output_path =
@@ -135,8 +123,9 @@ sf_nvcc::SfNvccOptions sf_nvcc::parse_command_line(const int argc, char *argv[])
 				   arg.ends_with(".cpp")) {
 				options.nvcc_opts.input_files.emplace_back(arg);
 				options.nvcc_opts.nvcc_args.emplace_back(arg);
-			} else if (arg != "-dryrun") {
-				// Pass through all args except -dryrun (we use it internally)
+			} else if (arg != "-dryrun" && arg != "--keep" &&
+				   arg != "--keep-dir" &&
+				   arg != "-lcudart_static") {
 				options.nvcc_opts.nvcc_args.emplace_back(arg);
 			}
 		}
@@ -195,8 +184,7 @@ void sf_nvcc::print_args(const SafeCudaOptions &safecuda_opts,
 			 const NvccOptions &nvcc_opts)
 {
 	const auto &[enable_bounds_check, enable_debug, enable_verbose,
-		     fail_fast, log_violations, log_file,
-		     keep_dir] = safecuda_opts;
+		     fail_fast, keep_dir] = safecuda_opts;
 	std::cout << ACOL(ACOL_Y, ACOL_BB) << ACOL(ACOL_K, ACOL_DF)
 		  << "sf-nvcc options:" ACOL_RESET() "\n\t"
 		  << "enable_bounds_check: " << std::boolalpha
@@ -204,8 +192,6 @@ void sf_nvcc::print_args(const SafeCudaOptions &safecuda_opts,
 		  << "enable_debug: " << enable_debug << "\n\t"
 		  << "enable_verbose: " << enable_verbose << "\n\t"
 		  << "fail_fast: " << fail_fast << "\n\t"
-		  << "log_violations: " << log_violations << "\n\t"
-		  << "log_file: " << (log_file.empty() ? "" : log_file)
 		  << "\n\t"
 		  << "keep_dir: " << keep_dir << "\n\t"
 		  << "output_path: " << nvcc_opts.output_path << "\n\t"

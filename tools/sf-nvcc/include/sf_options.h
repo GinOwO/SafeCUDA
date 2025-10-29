@@ -55,8 +55,6 @@ struct SafeCudaOptions {
 	bool enable_debug = false; ///< Enable debug instrumentation.
 	bool enable_verbose = false; ///< Enable verbose logging.
 	bool fail_fast = true; ///< Abort on first violation.
-	bool log_violations = false; ///< Log memory violations.
-	std::string log_file{"stderr"}; ///< Path for violation logs.
 	std::string keep_dir; ///< Directory to store intermediate files.
 };
 

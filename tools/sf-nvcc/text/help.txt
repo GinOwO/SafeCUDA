@@ -7,10 +7,10 @@ DESCRIPTION
     binaries with spatial memory violation detection.
 
 USAGE
-    sf-nvcc [-sf-version] [-sf-help] [-sf-bounds-check <TRUE|false>]
-            [-sf-debug <true|FALSE>] [-sf-verbose <true|FALSE>]
-            [-sf-fail-fast <true|FALSE>] [-sf-log-violations <true|FALSE>]
-            [-sf-log-path <path>] [-sf-keep-dir <path>] <nvcc args>
+    sf-nvcc [-sf-version] [-sf-help] [-sf-debug <true|FALSE>]
+            [-sf-verbose <true|FALSE>] [-sf-fail-fast <true|FALSE>]
+            [-sf-log-violations <true|FALSE>] [-sf-log-path <path>]
+            [-sf-keep-dir <path>] <nvcc args>
 
 SAFECUDA OPTIONS
     -sf-help
@@ -18,10 +18,6 @@ SAFECUDA OPTIONS
 
     -sf-version
         Display sf-nvcc version and applicable SafeCUDA build info.
-
-    -sf-bounds-check <TRUE|false>
-        Enable or disable spatial memory bounds checking injection (default: true)
-        When enabled, PTX is modified to validate all global memory accesses
 
     -sf-debug <true|FALSE>
         Enable debug mode with detailed PTX modification logging (default: false)
@@ -35,14 +31,6 @@ SAFECUDA OPTIONS
     -sf-fail-fast <TRUE|false>
         Abort kernel execution on first bounds violation (default: true)
         When false, first violation is logged but kernel execution continues
-
-    -sf-log-violations <true|FALSE>
-        Set if violations should be logged or not (default: false)
-        Logs are outputted to path specified by -sf-log-path
-
-    -sf-log-path <path>
-        Log bounds violations to specified file (default: stderr)
-        Only logs if -sf-log-violations is set to true
 
     -sf-keep-dir <path>
         Path to store intermediate files (default: system temp dir)
