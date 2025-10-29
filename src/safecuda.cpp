@@ -6,10 +6,13 @@
  * 
  * @author Navin <navinkumar.ao2022@vitstudent.ac.in>
  * @date 2025-07-05
- * @version 0.1.0
+ * @version 1.0.0
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  * 
  * Change Log:
+ * - 2025-10-30: Fixed a potential infinite recursion, removed epoch, decided to
+ *		keep magic word in as it's a small cost in exchange for not doing
+ *		a scan on the CPU side during cudaFree
  * - 2025-10-29: Moved a lot of stuff, manually passing d_table as arg to 2
  *		param kernels now, ptx side is generic for n param kernels but
  *		not sure of how to make it for n length in host side
@@ -49,8 +52,9 @@ cudaLaunchKernel_t real_cudaLaunchKernel = nullptr;
 
 static void sync_table_to_device()
 {
-	size_t entry_bytes = TABLE_ENTRIES * sizeof(memory::Entry);
-	size_t table_bytes = sizeof(memory::AllocationTable) + entry_bytes;
+	constexpr size_t entry_bytes = TABLE_ENTRIES * sizeof(memory::Entry);
+	constexpr size_t table_bytes =
+		sizeof(memory::AllocationTable) + entry_bytes;
 	cudaMemcpy(d_table_ptr, h_table, table_bytes, cudaMemcpyHostToDevice);
 }
 
@@ -69,8 +73,9 @@ void init_safecuda()
 	real_cudaLaunchKernel = reinterpret_cast<cudaLaunchKernel_t>(
 		dlsym(RTLD_NEXT, "cudaLaunchKernel"));
 
-	size_t entry_bytes = TABLE_ENTRIES * sizeof(memory::Entry);
-	size_t table_bytes = sizeof(memory::AllocationTable) + entry_bytes;
+	constexpr size_t entry_bytes = TABLE_ENTRIES * sizeof(memory::Entry);
+	constexpr size_t table_bytes =
+		sizeof(memory::AllocationTable) + entry_bytes;
 	cudaHostAlloc(&h_table, table_bytes, cudaHostAllocMapped);
 
 	if (!h_table) {
@@ -87,7 +92,7 @@ void init_safecuda()
 	d_table_ptr = static_cast<memory::AllocationTable *>(ptr);
 	cudaMemcpy(d_table_ptr, h_table, table_bytes, cudaMemcpyHostToDevice);
 
-	cudaDeviceSynchronize();
+	real_cudaDeviceSynchronize();
 }
 
 void shutdown_safecuda()
@@ -145,7 +150,7 @@ void check_and_report_errors()
 
 }
 
-extern "C" cudaError_t cudaMalloc(void **dev_ptr, std::size_t size)
+extern "C" cudaError_t cudaMalloc(void **devPtr, const std::size_t size)
 {
 	if (!safecuda::real_cudaMalloc)
 		safecuda::init_safecuda();
@@ -156,7 +161,7 @@ extern "C" cudaError_t cudaMalloc(void **dev_ptr, std::size_t size)
 			     cudaGetErrorString(err));
 		return err;
 	}
-	if (h_table->count >= 1024) {
+	if (h_table->count >= safecuda::TABLE_ENTRIES) {
 		safecuda::real_cudaFree(base);
 		std::fprintf(stderr, "[SafeCUDA] Allocation table full\n");
 		return cudaErrorMemoryAllocation;
@@ -166,21 +171,20 @@ extern "C" cudaError_t cudaMalloc(void **dev_ptr, std::size_t size)
 	entry->start_addr = reinterpret_cast<std::uintptr_t>(user_ptr);
 	entry->block_size = size;
 	entry->flags = safecuda::memory::NO_ERROR;
-	entry->epochs = 0;
-	safecuda::memory::Metadata meta = {0x5AFE, {0}, entry};
+	const safecuda::memory::Metadata meta = {0x5AFE, {0}, entry};
 	cudaMemcpy(base, &meta, 16, cudaMemcpyHostToDevice);
 	safecuda::sync_table_to_device();
-	*dev_ptr = user_ptr;
+	*devPtr = user_ptr;
 	return cudaSuccess;
 }
 
-extern "C" cudaError_t cudaMallocManaged(void **dev_ptr, std::size_t size,
-					 unsigned int flags)
+extern "C" cudaError_t cudaMallocManaged(void **devPtr, const std::size_t size,
+					 const unsigned int flags)
 {
 	if (!safecuda::real_cudaMallocManaged)
 		safecuda::init_safecuda();
 	void *base = nullptr;
-	cudaError_t err =
+	const cudaError_t err =
 		safecuda::real_cudaMallocManaged(&base, size + 16, flags);
 	if (err != cudaSuccess) {
 		std::fprintf(stderr,
@@ -198,20 +202,19 @@ extern "C" cudaError_t cudaMallocManaged(void **dev_ptr, std::size_t size,
 	entry->start_addr = reinterpret_cast<std::uintptr_t>(user_ptr);
 	entry->block_size = size;
 	entry->flags = safecuda::memory::NO_ERROR;
-	entry->epochs = 0;
-	safecuda::memory::Metadata meta = {0x5AFE, {0}, entry};
+	const safecuda::memory::Metadata meta = {0x5AFE, {0}, entry};
 	cudaMemcpy(base, &meta, 16, cudaMemcpyHostToDevice);
 	safecuda::sync_table_to_device();
-	*dev_ptr = user_ptr;
+	*devPtr = user_ptr;
 	return cudaSuccess;
 }
 
-extern "C" cudaError_t cudaFree(void *ptr)
+extern "C" cudaError_t cudaFree(void *devPtr)
 {
-	if (!ptr)
+	if (!devPtr)
 		return cudaSuccess;
 
-	void *base = static_cast<std::int8_t *>(ptr) - 16;
+	void *base = static_cast<std::int8_t *>(devPtr) - 16;
 	safecuda::memory::Metadata meta{};
 	cudaMemcpy(&meta, base, 16, cudaMemcpyDeviceToHost);
 	if (meta.magic == 0x5AFE && meta.entry)
@@ -244,10 +247,10 @@ extern "C" cudaError_t cudaLaunchKernel(const void *func, dim3 gridDim,
 	if (!safecuda::real_cudaLaunchKernel)
 		safecuda::init_safecuda();
 
-	int numParams = 7;
-	size_t size = (numParams + 1) * sizeof(void *);
+	constexpr int numParams = 6;
+	constexpr size_t size = (numParams + 2) * sizeof(void *);
 
-	void **newParams = (void **)alloca(size);
+	void **newParams = static_cast<void **>(alloca(size));
 	newParams[0] = &d_table_ptr;
 	newParams[1] = args[0];
 	newParams[2] = args[1];

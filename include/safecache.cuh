@@ -6,10 +6,11 @@
  *
  * @author Anirudh <anirudh.sridhar2022@vitstudent.ac.in>
  * @date 2025-09-22
- * @version 0.1.0
+ * @version 1.0.0
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  *
  * Change Log:
+ * - 2025-10-30: Removed Epoch
  * - 2025-10-23: Reworked Errors to work with bitwise OR as well
  * - 2025-10-22: Removed redundancies and fixed a [[noreturn]] bug on check_cuda
  * - 2025-10-15: Revised code to make class vars non-static and redeclare
@@ -31,7 +32,6 @@ struct Entry {
 	std::uintptr_t start_addr;
 	std::uint32_t block_size;
 	std::uint32_t flags;
-	std::uint32_t epochs;
 };
 
 struct Metadata {
