@@ -1,9 +1,6 @@
 #include <cuda_runtime.h>
 #include <stdio.h>
 
-#include <curand_kernel.h>
-#include <cuda_runtime.h>
-
 __global__ void scaleArray(float *data, int n)
 {
 	int idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -31,6 +28,29 @@ extern "C" void launchAddOne(float *d_data, int n)
 	int blockSize = 256;
 	int gridSize = (n + blockSize - 1) / blockSize;
 	addOne<<<gridSize, blockSize>>>(d_data, n);
+	cudaDeviceSynchronize();
+}
+
+__global__ void computeSeriesKernel(unsigned long long int *out, int samples)
+{
+	int idx = threadIdx.x + blockIdx.x * blockDim.x;
+	int stride = blockDim.x * gridDim.x;
+
+	unsigned long long int local = 0;
+	for (int i = idx; i < samples; i += stride) {
+		float x = (float)i / samples;
+		local += (int)(1000.0f *
+			       (x * x + 2.0f * x + 1.0f)); // simple polynomial
+	}
+
+	atomicAdd(out, local);
+}
+
+extern "C" void launchComputeSeries(unsigned long long int *d_out, int samples)
+{
+	int threads = 256;
+	int blocks = 256;
+	computeSeriesKernel<<<blocks, threads>>>(d_out, samples);
 	cudaDeviceSynchronize();
 }
 

@@ -4,6 +4,8 @@
 
 extern "C" void launchScaleArray(float *d_data, int n);
 extern "C" void launchAddOne(float *d_data, int n);
+extern "C" void launchComputeSeries(unsigned long long int *d_count,
+				    int samples);
 extern "C" void launchOutOfBoundsKernel(float *d_data, int n);
 
 int main()
@@ -28,17 +30,30 @@ int main()
 	for (auto val : h_data)
 		std::cout << val << " ";
 	std::cout << "\n\n";
-	std::cout << "Valid access completed successfully!" << std::endl;
 
+	unsigned long long int *d_count;
+	cudaMalloc(&d_count, sizeof(unsigned long long int));
+	cudaMemset(d_count, 0, sizeof(unsigned long long int));
+
+	launchComputeSeries(d_count, 1000000);
+
+	unsigned long long int h_count = 0;
+	cudaMemcpy(&h_count, d_count, sizeof(unsigned long long int),
+		   cudaMemcpyDeviceToHost);
+	cudaFree(d_count);
+
+	std::cout << "Series computation result = " << h_count << std::endl;
 	std::cout
 		<< "\n=== Test 2: Out-of-bounds access (should trigger error) ==="
 		<< std::endl;
 	constexpr int m = 1024;
 	constexpr size_t bytes = m * sizeof(float);
+
 	auto *h_data_err = new float[m];
 	for (int i = 0; i < m; ++i) {
 		h_data_err[i] = static_cast<float>(i);
 	}
+
 	float *d_data_err;
 	cudaMalloc(&d_data_err, bytes);
 	cudaMemcpy(d_data_err, h_data_err, bytes, cudaMemcpyHostToDevice);

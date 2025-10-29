@@ -10,6 +10,8 @@
  * @copyright Copyright (c) 2025 SafeCUDA Project. Licensed under GPL v3.
  *
  * Change Log:
+ * - 2025-10-31: Nvm brought back epoch as __reserved as removing that led to
+ *		the memory not getting aligned and hence breaking the entire thing.
  * - 2025-10-30: Removed Epoch
  * - 2025-10-23: Reworked Errors to work with bitwise OR as well
  * - 2025-10-22: Removed redundancies and fixed a [[noreturn]] bug on check_cuda
@@ -32,6 +34,7 @@ struct Entry {
 	std::uintptr_t start_addr;
 	std::uint32_t block_size;
 	std::uint32_t flags;
+	std::uint32_t __reserved;
 };
 
 struct Metadata {
@@ -44,6 +47,7 @@ struct AllocationTable {
 	Entry *entries;
 	std::uint32_t count;
 	std::uint32_t capacity;
+	std::uint32_t __reserved;
 };
 
 enum ErrorCode {
