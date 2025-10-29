@@ -48,9 +48,9 @@ int main()
 		<< "\n=== Test 2: Out-of-bounds access (should trigger error) ==="
 		<< std::endl;
 	constexpr int m = 1024;
-	const size_t bytes = m * sizeof(float);
+	constexpr size_t bytes = m * sizeof(float);
 
-	float *h_data_err = new float[m];
+	auto *h_data_err = new float[m];
 	for (int i = 0; i < m; ++i) {
 		h_data_err[i] = static_cast<float>(i);
 	}
