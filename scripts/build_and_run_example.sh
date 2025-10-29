@@ -3,7 +3,6 @@ set -e
 
 BUILD_TYPE=${1:-Release}
 BUILD_DIR="cmake-build-$BUILD_TYPE"
-N_JOBS=${2:-$(nproc)}
 SF_NVCC="$BUILD_DIR/bin/sf-nvcc"
 
 echo "-----------------------------------------------"
@@ -13,8 +12,12 @@ sh ./scripts/build.sh Release
 echo "-----------------------------------------------"
 echo ""
 
-export CUDA_PATH="/usr/local/cuda/bin"
-# export CUDA_PATH="/opt/cuda/bin"
+if [ -d "/usr/local/cuda/bin" ]; then
+    export CUDA_PATH="/usr/local/cuda/bin"
+else
+    export CUDA_PATH="/opt/cuda/bin"
+fi
+
 
 export NVCC_CCBIN="$CUDA_PATH/g++"
 export NVCC_CBIN="$CUDA_PATH/gcc"
@@ -41,12 +44,18 @@ echo "g++ version: $(g++ --version)"
 echo "-----------------------------------------------"
 
 echo "Building example_nvcc"
-nvcc -O3 -Xcompiler -fPIC --extended-lambda --expt-relaxed-constexpr --generate-code arch=compute_75,code=sm_75 examples/example.cpp examples/kernel.cu -o example_nvcc -Wno-deprecated-gpu-targets
+nvcc -O3 -Xcompiler -fPIC --extended-lambda --expt-relaxed-constexpr \
+  --generate-code arch=compute_75,code=sm_75 -rdc=true -Wno-deprecated-gpu-targets \
+  examples/example.cpp examples/kernel.cu \
+  -o example_nvcc
 
 echo "-----------------------------------------------"
 
 echo "Building example (sf-nvcc)"
-$SF_NVCC -O3 -Xcompiler -fPIC --extended-lambda --expt-relaxed-constexpr --generate-code arch=compute_75,code=sm_75 -rdc=true examples/example.cpp examples/kernel.cu -o example -Wno-deprecated-gpu-targets -sf-verbose true
+$SF_NVCC -O3 -Xcompiler -fPIC --extended-lambda --expt-relaxed-constexpr \
+  --generate-code arch=compute_75,code=sm_75 -rdc=true -Wno-deprecated-gpu-targets \
+  examples/example.cpp examples/kernel.cu -sf-verbose true \
+  -o example
 
 echo "-----------------------------------------------"
 
@@ -59,5 +68,4 @@ echo ""
 echo "Running SF-NVCC ver (should throw an exception):"
 export LD_PRELOAD=cmake-build-Release/libsafecuda.so:$LD_PRELOAD
 export LD_LIBRARY_PATH=cmake-build-Release/:$LD_LIBRARY_PATH
-export SAFECUDA_THROW_OOB=1
 time ./example
