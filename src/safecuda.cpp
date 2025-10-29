@@ -247,17 +247,13 @@ extern "C" cudaError_t cudaLaunchKernel(const void *func, dim3 gridDim,
 	if (!safecuda::real_cudaLaunchKernel)
 		safecuda::init_safecuda();
 
-	constexpr int numParams = 6;
+	constexpr int numParams = 2;
 	constexpr size_t size = (numParams + 2) * sizeof(void *);
 
 	void **newParams = static_cast<void **>(alloca(size));
 	newParams[0] = &d_table_ptr;
 	newParams[1] = args[0];
 	newParams[2] = args[1];
-	newParams[3] = args[2];
-	newParams[4] = args[3];
-	newParams[5] = args[4];
-	newParams[6] = args[5];
 	newParams[numParams] = nullptr;
 
 	return safecuda::real_cudaLaunchKernel(func, gridDim, blockDim,
