@@ -1,12 +1,15 @@
 #!/bin/bash
 set -e
 
-BUILD_TYPE=${1:-Debug}
+BUILD_TYPE=${1:-Release}
 BUILD_DIR="cmake-build-$BUILD_TYPE"
 N_JOBS=${2:-$(nproc)}
 
-export CUDA_PATH="/usr/local/cuda/bin"
-# export CUDA_PATH="/opt/cuda/bin"
+if [ -d "/usr/local/cuda/bin" ]; then
+    export CUDA_PATH="/usr/local/cuda/bin"
+else
+    export CUDA_PATH="/opt/cuda/bin"
+fi
 
 export NVCC_CCBIN="$CUDA_PATH/g++"
 export NVCC_CBIN="$CUDA_PATH/gcc"

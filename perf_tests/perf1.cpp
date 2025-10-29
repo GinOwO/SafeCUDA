@@ -6,6 +6,8 @@ extern "C" void launchVecAdd(float *data, int n);
 extern "C" void launchVecMul(float *data, int n);
 extern "C" void launchVecScale(float *data, int n);
 
+// 1. Large vector ops
+
 int main()
 {
 	const int n = 1024 * 1024;

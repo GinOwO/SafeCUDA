@@ -79,3 +79,6 @@ example
 example_nvcc
 perf*_nvcc
 perf*_sfnvcc
+
+.venv
+perf_tests/results

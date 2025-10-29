@@ -5,6 +5,8 @@
 extern "C" void launchInit(float *data, int n);
 extern "C" void launchSumReduce(float *data, int n);
 
+// 2. Sum reduce
+
 int main()
 {
 	const int n = 1024 * 1024;

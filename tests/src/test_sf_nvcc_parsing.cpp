@@ -148,27 +148,6 @@ TEST_F(SfNvccParsingTest, DefaultOptionsValues)
 	EXPECT_FALSE(opts.enable_debug);
 	EXPECT_FALSE(opts.enable_verbose);
 	EXPECT_TRUE(opts.fail_fast);
-	EXPECT_FALSE(opts.log_violations);
-	EXPECT_EQ(opts.log_file, "stderr");
-}
-
-/**
- * @brief Tests parsing and enabling of logging option with path
- *
- * Confirms that -sf-logging option correctly sets log_violations flag
- * and log_file path.
- */
-TEST_F(SfNvccParsingTest, LoggingOptionParsing)
-{
-	safecuda::tools::sf_nvcc::SfNvccOptions options;
-	const std::string arg = "-sf-logging";
-	const std::string val = "/tmp/sf.log";
-
-	options.safecuda_opts.log_violations = true;
-	options.safecuda_opts.log_file = val;
-
-	EXPECT_TRUE(options.safecuda_opts.log_violations);
-	EXPECT_EQ(options.safecuda_opts.log_file, "/tmp/sf.log");
 }
 
 /**
@@ -208,16 +187,9 @@ TEST_F(SfNvccParsingTest, MultipleSwitchesParsing)
 {
 	safecuda::tools::sf_nvcc::SfNvccOptions options;
 
-	const std::vector<std::string> args = {"-sf-bounds-check",
-					       "false",
-					       "-sf-debug",
-					       "true",
-					       "-sf-fail-fast",
-					       "true",
-					       "-sf-logging",
-					       "/var/log/sf.log",
-					       "-O2",
-					       "kernel.cu"};
+	const std::vector<std::string> args = {
+		"-sf-bounds-check", "false", "-sf-debug", "true",
+		"-sf-fail-fast",    "true",  "-O2",	  "kernel.cu"};
 
 	for (size_t i = 0; i < args.size(); ++i) {
 		const std::string &arg = args[i];
@@ -241,9 +213,6 @@ TEST_F(SfNvccParsingTest, MultipleSwitchesParsing)
 				options.safecuda_opts.fail_fast = true;
 			else if (val == "false")
 				options.safecuda_opts.fail_fast = false;
-		} else if (arg == "-sf-logging") {
-			options.safecuda_opts.log_violations = true;
-			options.safecuda_opts.log_file = args[++i];
 		} else if (arg.rfind("-sf-", 0) != 0) {
 			options.nvcc_opts.nvcc_args.push_back(arg);
 		}
@@ -252,8 +221,6 @@ TEST_F(SfNvccParsingTest, MultipleSwitchesParsing)
 	EXPECT_FALSE(options.safecuda_opts.enable_bounds_check);
 	EXPECT_TRUE(options.safecuda_opts.enable_debug);
 	EXPECT_TRUE(options.safecuda_opts.fail_fast);
-	EXPECT_TRUE(options.safecuda_opts.log_violations);
-	EXPECT_EQ(options.safecuda_opts.log_file, "/var/log/sf.log");
 
 	ASSERT_EQ(options.nvcc_opts.nvcc_args.size(), 2);
 	EXPECT_EQ(options.nvcc_opts.nvcc_args[0], "-O2");
