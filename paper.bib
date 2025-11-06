@@ -1,4 +1,4 @@
-@manual{nvidia2024cuda,
+@manual{nvidiacuda:2024,
     author = {NVIDIA Corporation},
     title = {CUDA Toolkit Documentation},
     year = {2024},
@@ -7,15 +7,19 @@
 }
 
 @article{miele:2016,
-    author = {Miele, Andrea},
-    title = {Buffer overflow vulnerabilities in CUDA: a preliminary analysis},
-    journal = {Journal of Computer Virology and Hacking Techniques},
-    volume = {12},
-    number = {2},
-    pages = {113--120},
-    year = {2016},
+    author    = {Andrea Miele},
+    title     = {Buffer overflow vulnerabilities in CUDA: a preliminary analysis},
+    journal   = {Journal of Computer Virology and Hacking Techniques},
+    volume    = {12},
+    number    = {2},
+    pages     = {113--120},
+    year      = {2016},
+    issn      = {2263-8733},
+    doi       = {10.1007/s11416-015-0251-1},
+    url       = {https://doi.org/10.1007/s11416-015-0251-1},
     publisher = {Springer}
 }
+
 
 @article{ziad:2023,
     author = {Ziad, Mohamed and Damani, Sana and Jaleel, Aamer and Keckler, Stephen and Stephenson, Mark},
@@ -66,30 +70,38 @@
 }
 
 @inproceedings{serebryany:2012,
-    author = {Serebryany, Konstantin and Bruening, Derek and Potapenko, Alexander and Vyukov, Dmitry},
-    title = {AddressSanitizer: A Fast Address Sanity Checker},
-    booktitle = {Proceedings of the 2012 USENIX Annual Technical Conference (USENIX ATC '12)},
-    pages = {28--39},
+    author = {Konstantin Serebryany and Derek Bruening and Alexander Potapenko and Dmitriy Vyukov},
+    title = {{AddressSanitizer}: A Fast Address Sanity Checker},
+    booktitle = {2012 USENIX Annual Technical Conference (USENIX ATC 12)},
     year = {2012},
-    publisher = {USENIX Association}
+    isbn = {978-931971-93-5},
+    address = {Boston, MA},
+    pages = {309--318},
+    url = {https://www.usenix.org/conference/atc12/technical-sessions/presentation/serebryany},
+    publisher = {USENIX Association},
+    month = jun
 }
 
 @article{di:2021,
-    author = {Di, Bang and Sun, Jianhua and Chen, Hao and Li, Dong},
-    title = {Efficient Buffer Overflow Detection on GPU},
-    journal = {IEEE Transactions on Parallel and Distributed Systems},
-    volume = {32},
-    number = {5},
-    pages = {1161--1177},
-    year = {2021},
-    doi = {10.1109/TPDS.2021.3068942}
+  author={Di, Bang and Sun, Jianhua and Chen, Hao and Li, Dong},
+  journal={IEEE Transactions on Parallel and Distributed Systems}, 
+  title={Efficient Buffer Overflow Detection on GPU}, 
+  year={2021},
+  volume={32},
+  number={5},
+  pages={1161-1177},
+  keywords={Graphics processing units;Kernel;Memory management;Runtime;Resource management;Performance evaluation;Instruction sets;Buffer overflows;CUDA;GPGPU;unified memory},
+  doi={10.1109/TPDS.2020.3042965}
 }
 
 @inproceedings{lee:2025,
-    author = {Lee, J. and Kim, Y. and Park, C. and Oh, S. and Kim, H.},
-    title = {Let-Me-In: (Still) Employing In-pointer Bounds Metadata for Fine-grained GPU Memory Safety},
-    booktitle = {2025 IEEE International Symposium on High Performance Computer Architecture (HPCA)},
-    pages = {1648--1661},
-    year = {2025},
-    doi = {10.1109/HPCA61900.2025.00122}
+  author={Lee, Jaewon and Chung, Euijun and Singh, Saurabh and Na, Seonjin and Kim, Yonghae and Lee, Jaekyu and Kim, Hyesoon},
+  booktitle={2025 IEEE International Symposium on High Performance Computer Architecture (HPCA)}, 
+  title={Let-Me-In: (Still) Employing In-pointer Bounds Metadata for Fine-grained GPU Memory Safety}, 
+  year={2025},
+  volume={},
+  number={},
+  pages={1648-1661},
+  keywords={Costs;Instruction sets;Memory management;Decision making;Graphics processing units;Static analysis;Metadata;Hardware;Robustness;Safety;gpu;security;architecture;memory safety},
+  doi={10.1109/HPCA61900.2025.00122}
 }
