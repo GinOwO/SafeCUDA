@@ -47,7 +47,7 @@ sudo ln -s /usr/bin/g++-14 /usr/local/cuda/bin/g++
 ```
 
 Note: If you encounter issues failing to compile due to math function
-specifications, apply the patch with (run as root):
+specifications ([this is a known issue](https://forums.developer.nvidia.com/t/error-exception-specification-is-incompatible-for-cospi-sinpi-cospif-sinpif-with-glibc-2-41/323591)), apply the patch with (run as root):
 
 ```bash
 sh ./scripts/apply_math_fix.sh
